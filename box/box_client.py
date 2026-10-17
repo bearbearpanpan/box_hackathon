@@ -140,16 +140,31 @@ class BoxClient:
                 return content.decode("latin-1", "replace")
 
     def upload_pdf(self, name: str, data: bytes, folder_id: Optional[str] = None) -> str:
-        from box_sdk_gen import UploadFileAttributes, UploadFileAttributesParentField
+        from box_sdk_gen import (
+            BoxAPIError,
+            UploadFileAttributes,
+            UploadFileAttributesParentField,
+            UploadFileVersionAttributes,
+        )
         client = self._connect()
         fid = folder_id or self.reports_folder
         import io
         with timed(_log, "box.upload_pdf", folder_id=fid, name=name,
                    bytes=len(data)) as span:
-            uploaded = client.uploads.upload_file(
-                UploadFileAttributes(name=name, parent=UploadFileAttributesParentField(id=fid)),
-                io.BytesIO(data),
-            )
+            try:
+                uploaded = client.uploads.upload_file(
+                    UploadFileAttributes(name=name, parent=UploadFileAttributesParentField(id=fid)),
+                    io.BytesIO(data),
+                )
+            except BoxAPIError as exc:
+                # same name already in the folder (e.g. a re-run) -> upload a new version
+                conflict = (exc.response_info.context_info or {}).get("conflicts") or {}
+                if exc.response_info.status_code != 409 or not conflict.get("id"):
+                    raise
+                log_event(_log, "box.upload_pdf.new_version", folder_id=fid,
+                          name=name, existing_file_id=conflict["id"])
+                uploaded = client.uploads.upload_file_version(
+                    conflict["id"], UploadFileVersionAttributes(name=name), io.BytesIO(data))
             file_id = uploaded.entries[0].id
             span["file_id"] = file_id
         return file_id
@@ -199,9 +214,9 @@ class BoxClient:
         """
         Single seam for Box AI. `mode` is 'ask' or 'extract'. Returns raw text.
         """
-        from box_sdk_gen import AiItemAsk, CreateAiAskMode
+        from box_sdk_gen import AiItemAsk, AiItemAskTypeField, CreateAiAskMode
         client = self._connect()
-        items = [AiItemAsk(id=fid) for fid in file_ids]
+        items = [AiItemAsk(id=fid, type=AiItemAskTypeField.FILE) for fid in file_ids]
         ask_mode = (CreateAiAskMode.SINGLE_ITEM_QA if len(file_ids) == 1
                     else CreateAiAskMode.MULTIPLE_ITEM_QA)
         # Box AI is the slowest external hop (one call per contract). Time every
