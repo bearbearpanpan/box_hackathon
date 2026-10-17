@@ -332,8 +332,17 @@ def main(argv: Optional[List[str]] = None) -> None:
     args = ap.parse_args(argv)
     docs = get_docs(args.offline)
     if args.list:
-        print(json.dumps({"source": docs.kind, "contracts": [c["name"] for c in docs.contracts()],
-                          "evidence": [e["name"] for e in docs.evidence()]}, indent=2))
+        out = {"source": docs.kind}
+        if docs.kind == "box":
+            out["whoami"] = docs.client.whoami()
+            for key in ("BOX_REVIEW_CONTRACTS_FOLDER_ID", "BOX_EVIDENCE_FOLDER_ID", "BOX_REPORTS_FOLDER_ID"):
+                try:
+                    out[key] = docs.client.folder_summary(os.environ[key])
+                except Exception as exc:
+                    out[key] = {"id": os.environ[key], "error": f"{type(exc).__name__}: {exc}"}
+        out["contracts"] = [c["name"] for c in docs.contracts()]
+        out["evidence"] = [e["name"] for e in docs.evidence()]
+        print(json.dumps(out, indent=2, default=str))
         return
     if args.review:
         print(json.dumps(review_contract(docs, args.review), indent=2))
