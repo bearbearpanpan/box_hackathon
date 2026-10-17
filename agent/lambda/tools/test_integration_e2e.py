@@ -32,6 +32,16 @@ import sys
 import time
 from contextlib import redirect_stdout
 
+# Guarantee OFFLINE mode before importing the handler. The handler auto-loads a
+# repo .env (envload), which may carry Box credentials that would flip
+# get_source() to the live BoxClient. This test exercises the offline pipeline
+# against fixtures, so strip those creds up front — same posture the public web
+# handler enforces. This keeps the test hermetic regardless of local .env.
+for _k in ("BOX_CLIENT_ID", "BOX_CLIENT_SECRET", "BOX_ENTERPRISE_ID"):
+    os.environ.pop(_k, None)
+os.environ["BOX_CLIENT_ID"] = ""
+os.environ["BOX_CLIENT_SECRET"] = ""
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 # tools/ -> lambda/ ; box/ and data/ live at the repo root.
 LAMBDA_DIR = os.path.abspath(os.path.join(HERE, ".."))

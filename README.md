@@ -9,120 +9,78 @@
 
 > Sales promises. Ops delivers. Reality Check makes sure they're the same number.
 
-An **AWS Bedrock agent** that reads tech-sales contracts from **Box**, drafts new
-contracts, raises risks by comparing promised timelines against real deal
-history, and researches features worth offering — then writes a risk report PDF
-back to Box with a review task for the deal desk.
+**Reality Check is a deal-intelligence agent for sales reps.** While a tech-sales
+rep is drafting a deal, the agent (AWS Bedrock) checks the deal against the
+company's own delivery history stored in **Box** and tells the rep whether the
+promise is realistic, with evidence. It then saves a risk report to Box and
+assigns a review task to the deal desk.
 
-**The gap it closes:** your ERP/CRM has dates and amounts. It doesn't know the
-delay was a Q4 hardware backorder, a risky supplier, or a deep discount that
-dragged services scope. That's in the documents — and that's what the agent reads.
+**It does not draft contracts.** The rep owns the contract. The agent only
+supplies intelligence.
+
+**Why Box:** the ERP/CRM has dates. It doesn't know the delay was a Q4 hardware
+backorder, a vendor that always slips, or a deep discount that dragged services
+scope. That lives in the documents, and the documents live in Box.
 
 ---
 
-## What's in here
+## The flow
 
 ```
-box_hackathon/
-├── RULES.md                    # the risk engine spec (similarity / timeline / risk tiers)
-├── .env.example                # all config keys (Box, Box AI, Bedrock) — copy to .env
-│
-├── data/                       # the document corpus
-│   ├── minipdf.py              # dependency-free PDF writer (sandbox has no network)
-│   ├── catalog.py              # customers, products, SLAs, vendors, planted risk patterns
-│   ├── generate_contracts.py   # deterministic generator
-│   └── contracts/              # 100 CTR-*.pdf + manifest.json (structured ground truth)
-│
-├── box/                        # Box integration
-│   ├── box_client.py           # Box API + Box AI wrapper (creds from env)
-│   ├── local_source.py         # offline fallback (reads manifest.json) — demo w/o keys
-│   └── mcp_config.json         # Box MCP server config
-│
-└── agent/                      # the Bedrock agent
-    ├── bedrock_agent.md        # agent instructions (paste into Bedrock)
-    ├── openapi.yaml            # action-group API schema
-    ├── action_groups.json      # agent/action-group reference config
-    ├── infra/setup.md          # step-by-step deploy guide
-    └── lambda/
-        ├── handler.py          # Lambda entry + Bedrock routing + local CLI
-        ├── requirements.txt    # boto3, boxsdk (only needed for live calls)
-        └── tools/
-            ├── comparison.py       # the RULES.md engine
-            ├── draft_contract.py   # tool: draft a contract
-            ├── raise_risks.py      # tool: raise risks (history + rules, with citations)
-            ├── deep_research.py     # tool: feature research (+ optional Bedrock brief)
-            ├── report.py            # buildPdf() + createReviewTask()
-            └── test_comparison.py   # engine tests (5/5 passing)
+1. Rep drafts a deal              e.g. Ashburn, Q4, Meridian hardware, "55 days"
+2. Rep asks the Bedrock agent     "Is this deal realistic?"
+3. Agent reads deal history       100 past contracts in Box (metadata)
+4. Agent checks the promise       finds the 3 most similar past deals (RULES.md)
+5. Agent answers the rep          🔴 RED  "55 days promised, history says 139"
+                                  + cited comparable contracts + top risks
+                                  + suggested safer timeline
+6. Agent writes back to Box       risk report PDF + review task assigned to deal desk
 ```
 
-## The three capabilities
+## What the rep gets
 
-| Capability | Tool | What it does |
-|---|---|---|
-| **Draft** | `draftContract` | Assemble a normalized tech-sales contract from deal params; defaults are reported as `assumptions`. |
-| **Raise risks** | `raiseRisks` | Compare promised timeline vs comparable past deals + static risk rules. Returns a headline, risk level, ranked risks, and cited comparables. |
-| **Deep research** | `deepResearch` | Recommend add-on features scored against vertical/region/SLA/size; optional Bedrock-written brief. |
-| **Full report** | `analyzeAndReport` | Read → Check → Report: builds the PDF, writes it to Box, creates a deal-desk review task. |
-
-## The planted patterns (so the demo finds something real)
-
-The 100-contract history is noisy but biased so the agent discovers:
-1. **Q4 hardware deals slip** (~30–60% over promise) — supply chain + holiday freight.
-2. **Meridian Systems is the risky vendor** — appliance/PDU backorders.
-3. **Discounts >35% correlate with services scope creep.**
-
-See `data/catalog.py` and `RULES.md`.
-
-## The agentic workflow (meeting notes → signed-off contract)
-
-The headline feature. One input (messy sales-call notes), a fully autonomous
-loop, and a human only when a human is actually needed:
-
-```
-meeting notes
-  → extract deal intent          (notes_parser)
-  → draft contract               (draft_contract)
-  → review & flag risks          (raise_risks + external risk_signals)
-  → revise: auto-fix what's safe (revise: discount caps, buffers, compliance)
-  → loop until converged OR a hard customer promise needs human approval
-  → open a REVIEW the deal desk opens, then approve / reject / request changes
-  → resume from the decision and loop again until it clears
-  → final report PDF + review task
-```
-
-**The agent generates its own risk signals** (not just what's in the deal):
-supplier delay notices, SLA-credit history, Q4 freight advisories, and
-compliance alerts — see `data/risk_signals.py`.
-
-**Human-in-the-loop is real.** When a deal needs sign-off, the agent opens a
-review package (`approvals.py`); a reviewer opens it, and can **approve as-is**
-(owns the risk), **reject** (walk away), or **request changes** (accept the
-agent's safer proposal or set their own number). The workflow resumes from that
-decision. All four paths are tested.
-
-### See the whole story in one command
-
-```bash
-python3 demo.py            # narrated walkthrough (--fast to skip pauses)
-```
-It runs a hard deal (undeliverable 60-day promise → RED → human loops in →
-converges to a safe timeline → GREEN) and a clean deal (auto-approved, no human).
-
-### Workflow actions (via the Lambda/CLI or Bedrock)
-
-| Action | What it does |
+| Output | Example |
 |---|---|
-| `run-workflow` | notes → draft → loop; opens a review if a human is needed |
-| `get-review` / `list-reviews` | what the reviewer sees when they open the doc |
-| `resolve-review` | reviewer decision: approve / reject / request_changes |
-| `resume-workflow` | continue from the decision until it clears |
+| Verdict | 🔴 RED / 🟠 AMBER / 🟢 GREEN |
+| Headline | "55 days promised, history says 139." |
+| Evidence | Comparable contracts by ID (e.g. CTR-0010: promised 100, took 141) |
+| Risks | Q4 hardware slip, Meridian Systems backorders, deep-discount scope creep |
+| Suggestion | Rebaseline toward the comparable median |
+| Hand-off | Report PDF in Box + review task assigned to deal desk |
 
-### Tests (every path)
+The verdict comes from deterministic rules ([RULES.md](./RULES.md)), not LLM
+guesswork. The LLM only talks to the rep. A human approves the final call.
+
+## Agent actions (Bedrock action group → Lambda)
+
+| Action | Purpose |
+|---|---|
+| `raiseRisks` | Deal terms in → verdict, headline, risks, cited comparables |
+| `analyzeAndReport` | Same check + report PDF uploaded to Box + review task |
+
+## Repo map
+
+```
+data/contracts/        100 synthetic past contracts (PDF) + manifest.json (ground truth)
+data/catalog.py        customers, SKUs, vendors, planted risk patterns
+box/box_client.py      live Box (CCG auth): list, upload, metadata, Box AI, tasks
+box/local_source.py    offline fallback; get_source() picks Box when creds are set
+agent/bedrock_agent.md agent instructions
+agent/openapi.yaml     action-group schema
+agent/infra/setup.md   Lambda + Bedrock deploy guide
+agent/lambda/handler.py         Lambda entry + local CLI
+agent/lambda/tools/comparison.py   the RULES.md engine
+agent/lambda/tools/raise_risks.py  history check + risk rules
+agent/lambda/tools/report.py       buildPdf() + createReviewTask()
+```
+
+## Tests
+
 ```bash
-python3 agent/lambda/tools/test_comparison.py          # 5/5  (risk engine)
-python3 agent/lambda/tools/test_workflow.py             # 10/10 (notes, loop, reviewer paths)
-python3 agent/lambda/tools/features/test_features.py    # 6/6  (the 5 wow features)
-python3 agent/lambda/tools/test_integration_e2e.py      # 7/7  (full pipeline + metric emissions)
+python3 agent/lambda/tools/test_comparison.py          # 5/5   (risk engine)
+python3 agent/lambda/tools/test_workflow.py            # 10/10 (notes, loop, reviewer paths)
+python3 agent/lambda/tools/features/test_features.py   # 6/6   (the wow features)
+python3 agent/lambda/tools/test_integration_e2e.py     # 7/7   (full pipeline + metric emissions)
 ```
 
 The integration test drives the full `handler.run_action` dispatch (the same
@@ -131,30 +89,15 @@ metrics the CloudWatch dashboard reads. It runs offline by default; set
 `RC_E2E_LIVE_CW=1` (with AWS creds + the deployed observability stack) to also
 round-trip a canary metric through live CloudWatch.
 
-## "Wow" features (see [ROADMAP.md](./ROADMAP.md))
+## Planted patterns in the history
 
-Five capabilities that extend the core, each grounded in what the contract-
-intelligence market ships (Ironclad, LinkSquares, Sirion) plus our promise-vs-
-reality wedge. All runnable via the handler/CLI and covered by tests:
+1. **Q4 hardware deals slip** 30–60% (supply chain, holiday freight).
+2. **Meridian Systems** is the risky hardware vendor (appliance/PDU backorders).
+3. **Discounts >35%** correlate with services scope creep.
 
-| # | Feature | Action | What it shows |
-|---|---------|--------|---------------|
-| 1 | **Deal Grade (A–F) + benchmark** | `grade-deal` | "This deal is a D. Portfolio median is C. Safer than 25% of deals." |
-| 2 | **Auto-redline from clause playbook** | `redline` | Actual clause edits (strike/insert) with fallback language + rationale |
-| 3 | **Obligation & milestone tracker** | `obligations` | Dated register of every commitment with owners + alert windows |
-| 4 | **"What-if" negotiation simulator** | `simulate`, `path-to-grade` | Move the levers, watch grade/risk recompute; "what gets us to a B?" |
-| 5 | **Portfolio radar / early-warning** | `portfolio-radar` | "10 deals route Meridian hardware in Q4 — $9M TCV exposed, +52d avg slip" |
-
-## Run it right now (no keys needed)
-
-The pipeline auto-detects: if Box credentials are set it uses Box; otherwise it
-reads `data/contracts/manifest.json`. So you can demo tonight:
+## Run it offline (no keys)
 
 ```bash
-# regenerate the 100 PDFs (optional; already committed)
-python3 data/generate_contracts.py
-
-# run the full pipeline on an aggressive Q4 + Meridian hardware deal
 cd agent/lambda
 python3 handler.py analyze-and-report --params '{
   "region":"US-East (Ashburn, VA)","signed_quarter":"Q4",
@@ -162,19 +105,54 @@ python3 handler.py analyze-and-report --params '{
   "line_items":[{"sku":"SKU-HW-GPU","qty":2},{"sku":"SKU-SAAS-CORE","qty":250}]
 }'
 ```
-Expected: **🔴 RED — "55 days promised, history says 91,"** with cited
-comparable contracts, a report PDF in `data/reports/`, and a review task.
+Expected: 🔴 RED, "55 days promised, history says 139," report PDF in
+`data/reports/`, local review task JSON.
 
-Run the engine tests:
 ```bash
-python3 agent/lambda/tools/test_comparison.py        # 5/5
+python3 agent/lambda/tools/test_comparison.py   # engine tests
 ```
 
 ## Going live
 
-Drop your keys into `.env` (see `.env.example`), then follow
-[`agent/infra/setup.md`](./agent/infra/setup.md) to deploy the Lambda, create the
-Bedrock agent + action group, and wire Box (API or MCP).
+Copy `.env.example` to `.env`, fill in Box + AWS values, then follow
+[`agent/infra/setup.md`](./agent/infra/setup.md).
+
+---
+
+## Issues to solve before the demo
+
+**P0: must have**
+
+1. **Pin the Box SDK.** `requirements.txt` has `boxsdk>=3.9.0`; v10 drops the
+   legacy `from boxsdk import Client, CCGAuth`. Pin `boxsdk<10` and verify the import.
+2. **Set up Box.** Create `Reality Check/Deal History` and `Reality Check/Reports`
+   in your Box, invite the `AutomationUser_…` service account as Editor, upload
+   the 100 contract PDFs, set `BOX_CONTRACTS_FOLDER_ID` / `BOX_REPORTS_FOLDER_ID`
+   (default `0` is the service account's own root, not yours).
+3. **Stop per-request Box AI calls.** `handler._history()` runs Box AI extraction
+   on all 100 contracts on every request (≈100 of 1,000 monthly AI units, and a
+   Lambda timeout). Index once: write each contract's fields to
+   `global/properties` metadata, then read metadata at runtime.
+4. **Metadata write fails on the free plan.** `write_metadata()` uses an
+   `enterprise` template; switch to `global/properties`.
+5. **Review task isn't assigned.** `createReviewTask()` creates the task but
+   never calls `task_assignments`. Add `BOX_REVIEWER_USER_ID` and assign it.
+6. **Narrow the Bedrock agent to intelligence only.** Remove `draftContract`
+   and `deepResearch` from `openapi.yaml` and `bedrock_agent.md`.
+7. **Deploy.** Package the Lambda with `boxsdk`, timeout ≥ 60s, Box creds as env
+   vars. Create the Bedrock agent + action group, pick a current Claude model
+   (`.env.example` lists an old one).
+
+**P1: if time**
+
+8. **Read the draft from Box.** Rep saves the draft deal in `Reality Check/Drafts`;
+   the agent pulls its terms with Box AI (`/ai/extract_structured`) instead of
+   the rep typing them.
+9. **Backup:** record the offline demo in case live Box/Bedrock fails.
+
+**Out of scope for this demo:** contract drafting, the notes → draft workflow,
+`docs/` (data-center story), and the extra features (grade, redline,
+simulator, portfolio radar). The code stays in the repo but isn't in the pitch.
 
 ## Security & docs
 

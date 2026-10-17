@@ -1,5 +1,49 @@
 # Deploying Reality Check
 
+## Do you even need Lambda? (short answer: no, not for a local demo)
+
+There are two ways to run this, and they are independent:
+
+| | Local | AWS (Bedrock agent + Lambda) |
+|---|---|---|
+| **Need Lambda?** | **No** | Yes |
+| **How it runs** | `python3 demo.py` / `python3 handler.py <action>` | Bedrock agent calls the Lambda |
+| **Bedrock** | Optional — calls Bedrock directly via `boto3` using your AWS creds; falls back to deterministic logic if unset | Lambda calls Bedrock with its IAM role |
+| **Box** | Optional — direct Box API via `boxsdk`; falls back to local `manifest.json` | Same, from inside Lambda |
+| **Best for** | the demo, dev, iterating | a hosted, always-on agent |
+
+**Lambda is only the hosting mechanism for the Bedrock *agent*.** Running
+locally, your machine IS the executor — the same `handler.py` runs your Python
+directly, and it talks to Bedrock/Box over the network using your local
+credentials. No Lambda, no API Gateway, no IAM roles required.
+
+Use Lambda only when you want the agent to live in AWS and be invoked by the
+Bedrock Agent runtime (so a conversational agent, not just a script, drives it).
+
+---
+
+## Local demo (no Lambda, no AWS infra)
+
+```bash
+cp .env.example .env          # fill in keys you have (all optional)
+pip install boto3 boxsdk      # only needed for LIVE Bedrock/Box
+python3 agent/lambda/handler.py check-config   # preflight: are keys live?
+python3 demo.py               # full narrated demo
+```
+- `.env` is auto-loaded (no `source` needed). Real shell/Lambda env vars win.
+- With **no keys**: everything runs in deterministic offline mode — still a
+  complete, honest demo.
+- With **AWS keys** (`AWS_REGION`, `BEDROCK_MODEL_ID`, credentials via
+  `aws configure` or env): the notes parser and research brief use Bedrock.
+- With **Box keys**: contracts are read from / reports written to Box.
+
+`check-config` makes one tiny real call to each configured service and prints
+`✅ connected` or a clear error, so you verify keys BEFORE going live.
+
+---
+
+## AWS deployment (only if you want the hosted agent)
+
 Everything below assumes you've filled in `.env` from `.env.example`.
 
 ## 0. Prerequisites

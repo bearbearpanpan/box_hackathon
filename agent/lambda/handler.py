@@ -26,6 +26,11 @@ sys.path.insert(0, os.path.join(HERE, "tools"))
 sys.path.insert(0, os.path.abspath(os.path.join(HERE, "..", "..", "box")))
 sys.path.insert(0, os.path.abspath(os.path.join(HERE, "..", "..", "data")))
 
+# Auto-load .env (Box + AWS keys) so running locally needs no `source` step.
+# Real env vars (e.g. Lambda config) always win over the file.
+import envload  # noqa: E402
+envload.load_env()
+
 import draft_contract as draft_tool          # noqa: E402
 import raise_risks as risk_tool              # noqa: E402
 import deep_research as research_tool        # noqa: E402
@@ -138,6 +143,10 @@ def _dispatch_action(action: str, params: Dict[str, Any]) -> Dict[str, Any]:
     if action in ("grade-deal", "redline", "obligations", "simulate",
                   "path-to-grade", "portfolio-radar"):
         return run_feature(action, params)
+
+    if action == "check-config":
+        import check_config
+        return check_config.run()
 
     raise ValueError(f"Unknown action: {action}")
 

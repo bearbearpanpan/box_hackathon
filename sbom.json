@@ -1,10 +1,10 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:e19d89cb-10d5-554f-be0c-07d21adc69f6",
+  "serialNumber": "urn:uuid:8b9504fa-0d4f-5561-bfff-36287974a087",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-10-17T16:03:14.083463+00:00",
+    "timestamp": "2026-10-17T18:12:41.366352+00:00",
     "tools": [
       {
         "vendor": "Reality Check",
@@ -29,24 +29,36 @@
     {
       "type": "library",
       "name": "boto3",
-      "version": "1.34.0",
-      "purl": "pkg:pypi/boto3@1.34.0",
+      "version": "1.39.0",
+      "purl": "pkg:pypi/boto3@1.39.0",
       "properties": [
         {
           "name": "constraint",
-          "value": ">=1.34.0"
+          "value": ">=1.39.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "botocore",
+      "version": "1.39.0",
+      "purl": "pkg:pypi/botocore@1.39.0",
+      "properties": [
+        {
+          "name": "constraint",
+          "value": ">=1.39.0"
         }
       ]
     },
     {
       "type": "library",
       "name": "boxsdk",
-      "version": "3.9.0",
-      "purl": "pkg:pypi/boxsdk@3.9.0",
+      "version": "3.14.0",
+      "purl": "pkg:pypi/boxsdk@3.14.0",
       "properties": [
         {
           "name": "constraint",
-          "value": ">=3.9.0"
+          "value": "==3.14.0"
         }
       ]
     }
