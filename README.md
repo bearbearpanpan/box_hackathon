@@ -1,5 +1,12 @@
 # Reality Check
 
+[![CodeQL](https://github.com/sethusrinivasan/box_hackathon/actions/workflows/codeql.yml/badge.svg)](https://github.com/sethusrinivasan/box_hackathon/actions/workflows/codeql.yml)
+[![Security](https://github.com/sethusrinivasan/box_hackathon/actions/workflows/security.yml/badge.svg)](https://github.com/sethusrinivasan/box_hackathon/actions/workflows/security.yml)
+[![SBOM](https://github.com/sethusrinivasan/box_hackathon/actions/workflows/sbom.yml/badge.svg)](https://github.com/sethusrinivasan/box_hackathon/actions/workflows/sbom.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![OWASP Top 10:2025](https://img.shields.io/badge/OWASP-Top%2010%3A2025-success.svg)](./docs/SECURITY.md)
+[![Python 3](https://img.shields.io/badge/python-3-blue.svg)](https://www.python.org/)
+
 > Sales promises. Ops delivers. Reality Check makes sure they're the same number.
 
 An **AWS Bedrock agent** that reads tech-sales contracts from **Box**, drafts new
@@ -161,6 +168,17 @@ python3 agent/lambda/tools/test_comparison.py        # 5/5
 Drop your keys into `.env` (see `.env.example`), then follow
 [`agent/infra/setup.md`](./agent/infra/setup.md) to deploy the Lambda, create the
 Bedrock agent + action group, and wire Box (API or MCP).
+
+## Security & docs
+
+- [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — components, request flow, trust boundaries.
+- [`docs/SECURITY.md`](./docs/SECURITY.md) — threat model mapped to OWASP Top 10:2025.
+- [`docs/DOC_AUDIT.md`](./docs/DOC_AUDIT.md) — documentation audit.
+- [`sbom.json`](./sbom.json) — CycloneDX SBOM, regenerated on every check-in.
+
+Security tooling runs on every push/PR: CodeQL + Bandit (SAST), pip-audit +
+Dependabot (dependencies), and Gitleaks (secret scanning). Install the SBOM
+pre-commit hook once with `./scripts/install-hooks.sh`.
 
 ---
 *All contract data is synthetic. Customer names are fictional.*

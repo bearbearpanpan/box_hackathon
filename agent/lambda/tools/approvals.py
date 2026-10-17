@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import os
 import json
+import re
 import time
 import uuid
 from datetime import datetime, timezone
@@ -34,8 +35,18 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _safe_review_id(review_id: str) -> str:
+    """review_id can be caller-supplied (create_review accepts one, and
+    get/resolve take it from params), so reject anything that could traverse
+    outside REVIEW_DIR. Allow only the id charset we actually generate."""
+    rid = str(review_id)
+    if not rid or rid in (".", "..") or not re.fullmatch(r"[A-Za-z0-9._-]+", rid):
+        raise ValueError(f"invalid review_id: {review_id!r}")
+    return rid
+
+
 def _path(review_id: str) -> str:
-    return os.path.join(REVIEW_DIR, f"{review_id}.json")
+    return os.path.join(REVIEW_DIR, f"{_safe_review_id(review_id)}.json")
 
 
 def create_review(package: Dict[str, Any]) -> Dict[str, Any]:
@@ -69,8 +80,12 @@ def create_review(package: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def get_review(review_id: str) -> Optional[Dict[str, Any]]:
-    """Open a review package (what the reviewer sees when they open the doc)."""
-    p = _path(review_id)
+    """Open a review package (what the reviewer sees when they open the doc).
+    An invalid/unsafe review_id is treated as 'not found' rather than an error."""
+    try:
+        p = _path(review_id)
+    except ValueError:
+        return None
     if not os.path.exists(p):
         return None
     with open(p) as fh:

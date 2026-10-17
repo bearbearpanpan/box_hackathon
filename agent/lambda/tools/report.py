@@ -96,6 +96,12 @@ def createReviewTask(source, report_file_id: str, draft_id: str, risk_level: str
         "message": message,
         "created_at": datetime.utcnow().isoformat() + "Z",
     }
-    with open(os.path.join(out_dir, f"task_{draft_id}.json"), "w") as fh:
+    # draft_id is caller-derived; strip path components so the task record
+    # can't be written outside the reports directory (path traversal).
+    safe_draft_id = os.path.basename(str(draft_id)).replace("\\", "_") or "draft"
+    task_path = os.path.join(out_dir, f"task_{safe_draft_id}.json")
+    if os.path.commonpath([out_dir, os.path.abspath(task_path)]) != out_dir:
+        raise ValueError(f"unsafe draft_id: {draft_id!r}")
+    with open(task_path, "w") as fh:
         json.dump(rec, fh, indent=2)
     return rec

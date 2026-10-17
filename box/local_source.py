@@ -59,9 +59,15 @@ class LocalSource:
 
     def upload_pdf(self, name: str, data: bytes, folder_id: Optional[str] = None) -> str:
         here = os.path.dirname(os.path.abspath(__file__))
-        out_dir = os.path.join(here, "..", "data", "reports")
+        out_dir = os.path.abspath(os.path.join(here, "..", "data", "reports"))
         os.makedirs(out_dir, exist_ok=True)
-        path = os.path.join(out_dir, name)
+        # Sanitize: the report name is built from caller-supplied fields
+        # (e.g. contract_id), so strip any path components to prevent writing
+        # outside the reports directory (path traversal).
+        safe_name = os.path.basename(name).replace("\\", "_")
+        path = os.path.join(out_dir, safe_name)
+        if os.path.commonpath([out_dir, os.path.abspath(path)]) != out_dir:
+            raise ValueError(f"unsafe report name: {name!r}")
         with open(path, "wb") as fh:
             fh.write(data)
         return path
