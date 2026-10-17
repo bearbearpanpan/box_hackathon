@@ -66,16 +66,18 @@ report shows both.
 | **Delivery deadline** | A date has no committed plan or beats comparable delivery history | 30-day migration; comparable migrations took 58–72 days |
 | **Performance commitment** | A speed, throughput, or scale promise exceeds the benchmark or its conditions | 10 GB/s sustained; benchmark validates 5 GB/s |
 
-### Decision rules
+### Decision workflow
 
-```
-For each claim:
-  no relevant source in Box      → No source found   (High)
-  source matches the claim       → No risk           (None)
-  source does not match          → Risk identified, by category:
-                                      Feature availability   (High)
-                                      Delivery deadline      (High)
-                                      Performance commitment (Medium)
+```mermaid
+flowchart TD
+    A[For each contract claim] --> B{Relevant source found in Box?}
+    B -->|No| C[No source found · HIGH]
+    B -->|Yes| D{Does the claim match the source?}
+    D -->|Yes| E[No risk]
+    D -->|No| F{Risk category?}
+    F --> G[Feature availability · HIGH]
+    F --> H[Delivery deadline · HIGH]
+    F --> I[Performance commitment · MEDIUM]
 ```
 
 - A match must cover the claim's conditions: Region, configuration, date, workload.
