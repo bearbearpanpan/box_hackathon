@@ -4,8 +4,6 @@
   <img src="docs/assets/reality-check.png" alt="Reality Check — Sales Claim Checker Agent" width="400">
 </p>
 
-> Sales promises. Ops delivers. Reality Check makes sure they're the same thing.
-
 **Help sales teams identify risks before making commitments to customers.**
 
 Reality Check reviews a draft sales contract before the commitments in it are
