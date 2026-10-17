@@ -124,6 +124,39 @@ class BoxClient:
             span["count"] = len(files)
         return files
 
+    def list_files(self, folder_id: str, ext: str = ".pdf", depth: int = 2) -> List[BoxFile]:
+        items = self._connect().folders.get_folder_items(folder_id, limit=1000).entries or []
+        out = []
+        for i in items:
+            if i.type == "file" and i.name.lower().endswith(ext):
+                out.append(BoxFile(id=i.id, name=i.name))
+            elif i.type == "folder" and depth > 0:
+                out.extend(self.list_files(i.id, ext, depth - 1))
+        return out
+
+    def folder_summary(self, folder_id: str) -> dict:
+        client = self._connect()
+        folder = client.folders.get_folder_by_id(folder_id)
+        items = client.folders.get_folder_items(folder_id, limit=1000).entries or []
+        return {"id": folder_id, "name": folder.name,
+                "items": [f"{getattr(i.type, 'value', i.type)}: {i.name}" for i in items]}
+
+    def download_bytes(self, file_id: str) -> bytes:
+        return self._connect().downloads.download_file(file_id).read()
+
+    def ensure_folder(self, name: str, parent_id: str) -> str:
+        from box_sdk_gen import BoxAPIError, CreateFolderParent
+        client = self._connect()
+        try:
+            return client.folders.create_folder(name, CreateFolderParent(id=parent_id)).id
+        except BoxAPIError as exc:
+            conflicts = (exc.response_info.context_info or {}).get("conflicts") or []
+            if isinstance(conflicts, dict):
+                conflicts = [conflicts]
+            if exc.response_info.status_code != 409 or not conflicts:
+                raise
+            return conflicts[0]["id"]
+
     def download_text(self, file_id: str) -> str:
         """Download a file's bytes. (PDF text parsing is done by the caller /
         Box AI; this returns raw bytes decoded best-effort for text docs.)"""

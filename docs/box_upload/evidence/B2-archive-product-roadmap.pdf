@@ -1,0 +1,96 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [6 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Length 1935 >>
+stream
+BT
+/F2 16.0 Tf
+1 0 0 1 60.0 722.0 Tm
+(Archive Product Roadmap) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 696.0 Tm
+(Document ID: B2 | Owner: Archive Storage Product Management \(Daniel Okafor\) | Last updated:) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 682.0 Tm
+(October 8, 2026 | Status: Internal planning document) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 662.0 Tm
+(Fictional demo data. Not actual AWS product plans or commitments.) Tj
+/F2 12.0 Tf
+1 0 0 1 60.0 622.0 Tm
+(How to read this roadmap) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 600.0 Tm
+(Committed means an approved release with a confirmed date that may be shared with customers.) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 586.0 Tm
+(Target means a planning date that may move and must not be promised. Exploratory means no) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 572.0 Tm
+(approved plan or date; not available for customer launch.) Tj
+/F2 12.0 Tf
+1 0 0 1 60.0 532.0 Tm
+(Feature status) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 510.0 Tm
+(- Customer-managed key rotation reports: Committed. Release date November 15, 2026.) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 490.0 Tm
+(- Archive tier restore notifications: Committed. Release date December 1, 2026.) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 470.0 Tm
+(- Cross-Region archive replication: Target Q2 2027. Dependency: replication control plane) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 456.0 Tm
+(rebuild.) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 436.0 Tm
+(- Smart Archive Search \(full-text search across archived objects\): Exploratory. No approved) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 422.0 Tm
+(plan, no release date. Not available for customer launch. Depends on a search indexing service) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 408.0 Tm
+(that has not been funded.) Tj
+/F2 12.0 Tf
+1 0 0 1 60.0 368.0 Tm
+(Guidance for field teams) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 346.0 Tm
+(Only Committed items may appear in customer agreements, and only with their published date.) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 332.0 Tm
+(Target and Exploratory items must not be included as contract commitments.) Tj
+ET
+
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 5 0 R >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000121 00000 n 
+0000000191 00000 n 
+0000000266 00000 n 
+0000002253 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+2389
+%%EOF
