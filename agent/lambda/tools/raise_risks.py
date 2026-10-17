@@ -10,6 +10,8 @@ can turn into a PDF.
 """
 from __future__ import annotations
 
+import ast
+import operator
 import os
 import sys
 from typing import Dict, Any, List
@@ -19,6 +21,69 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "data")))
 
 import comparison  # noqa: E402
+
+
+# --- safe trigger evaluation ------------------------------------------------
+# RISK_LIBRARY triggers are small boolean expressions (e.g.
+# "has_hardware and quarter == 'Q4' and promised_days < 90"). We evaluate them
+# with a restricted AST walker instead of eval() so that a trigger string can
+# never execute arbitrary code — even if RISK_LIBRARY is ever sourced
+# externally (a feed, Box, config). Only the node types the rules actually use
+# are permitted; anything else raises and the rule is skipped.
+_CMP_OPS = {
+    ast.Eq: operator.eq,
+    ast.NotEq: operator.ne,
+    ast.Lt: operator.lt,
+    ast.LtE: operator.le,
+    ast.Gt: operator.gt,
+    ast.GtE: operator.ge,
+    ast.In: lambda a, b: a in b,
+    ast.NotIn: lambda a, b: a not in b,
+}
+
+
+class _UnsafeExpression(ValueError):
+    """Raised when a trigger expression contains a disallowed construct."""
+
+
+def _safe_eval(node: ast.AST, ctx: Dict[str, Any]) -> Any:
+    if isinstance(node, ast.Expression):
+        return _safe_eval(node.body, ctx)
+    if isinstance(node, ast.BoolOp):
+        values = [_safe_eval(v, ctx) for v in node.values]
+        if isinstance(node.op, ast.And):
+            return all(values)
+        if isinstance(node.op, ast.Or):
+            return any(values)
+        raise _UnsafeExpression("unsupported boolean operator")
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
+        return not _safe_eval(node.operand, ctx)
+    if isinstance(node, ast.Compare):
+        left = _safe_eval(node.left, ctx)
+        for op, comparator in zip(node.ops, node.comparators):
+            fn = _CMP_OPS.get(type(op))
+            if fn is None:
+                raise _UnsafeExpression("unsupported comparison operator")
+            right = _safe_eval(comparator, ctx)
+            if not fn(left, right):
+                return False
+            left = right
+        return True
+    if isinstance(node, ast.Name):
+        if node.id in ctx:
+            return ctx[node.id]
+        raise _UnsafeExpression(f"unknown name: {node.id}")
+    if isinstance(node, (ast.Tuple, ast.List)):
+        return [_safe_eval(e, ctx) for e in node.elts]
+    if isinstance(node, ast.Constant):
+        return node.value
+    raise _UnsafeExpression(f"disallowed expression node: {type(node).__name__}")
+
+
+def _eval_trigger(expr: str, ctx: Dict[str, Any]) -> bool:
+    """Safely evaluate a single RISK_LIBRARY trigger expression."""
+    tree = ast.parse(expr, mode="eval")
+    return bool(_safe_eval(tree, ctx))
 
 
 def _eval_static_rules(draft: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -43,7 +108,7 @@ def _eval_static_rules(draft: Dict[str, Any]) -> List[Dict[str, Any]]:
     fired = []
     for rule in C.RISK_LIBRARY:
         try:
-            if eval(rule["trigger"], {"__builtins__": {}}, ctx):  # noqa: S307 - trusted internal rules
+            if _eval_trigger(rule["trigger"], ctx):
                 fired.append({
                     "id": rule["id"],
                     "title": rule["title"],
@@ -51,7 +116,8 @@ def _eval_static_rules(draft: Dict[str, Any]) -> List[Dict[str, Any]]:
                     "detail": rule["detail"],
                     "mitigation": rule["mitigation"],
                 })
-        except Exception:
+        except (_UnsafeExpression, SyntaxError):
+            # A malformed or disallowed trigger never fires and never executes.
             continue
     return fired
 
