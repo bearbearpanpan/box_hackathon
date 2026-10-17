@@ -15,6 +15,9 @@ import os
 from typing import List, Optional
 
 from box_client import BoxFile  # reuse the dataclass
+from telemetry import get_logger, log_event
+
+_log = get_logger("reality_check.source")
 
 
 class LocalSource:
@@ -80,5 +83,11 @@ def get_source():
     """Return a live BoxClient if Box creds are set, else the local fallback."""
     if os.environ.get("BOX_CLIENT_ID") and os.environ.get("BOX_CLIENT_SECRET"):
         from box_client import BoxClient
+        log_event(_log, "source.selected", backend="box")
         return BoxClient()
+    # A production deployment that silently falls back to local fixtures would
+    # look healthy while serving stale data — surface it as a warning.
+    import logging
+    log_event(_log, "source.selected", level=logging.WARNING, backend="local",
+              reason="Box credentials not set")
     return LocalSource()

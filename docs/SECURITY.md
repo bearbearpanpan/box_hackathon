@@ -37,14 +37,18 @@ Trust boundaries (from [ARCHITECTURE.md](./ARCHITECTURE.md)):
 | F6 | **A03 Software Supply Chain Failures** | `>=` version ranges, no lockfile; placeholder MCP package name (typosquat-prone). | **Mitigated** (SBOM + Dependabot + pip-audit + dep-review) |
 | F7 | **A02 Security Misconfiguration** | `.env` present at repo root; risk of committing real credentials. | **Verified safe** — `.env` is gitignored and was never committed |
 | F8 | **A05 Injection** | No input validation on flattened Bedrock params; types/ranges trusted implicitly. | Open — documented |
-| F9 | **A10 Mishandling of Exceptional Conditions** | Broad `try/except: continue` / bare excepts silently swallow errors (e.g. around rule eval, AI JSON parsing). | Partially addressed — eval path now catches narrow exceptions |
+| F9 | **A10 Mishandling of Exceptional Conditions** | Broad `try/except: continue` / bare excepts silently swallow errors (e.g. around rule eval, AI JSON parsing). | **Mostly addressed** — eval path narrowed; Box AI / metadata / Bedrock degrade paths now log a warning + metric before falling back (`box/telemetry.py`) instead of failing silently |
 
 ### Not applicable / low relevance
 - **A04 Cryptographic Failures** — no custom crypto; TLS handled by SDKs.
 - **A06 Insecure Design** — human-in-the-loop approval is an intentional
   security control, not a gap.
-- **A09 Logging & Alerting Failures** — CI now surfaces SAST/secret/dependency
-  alerts; application-level audit logging is a deploy-time concern.
+- **A09 Logging & Alerting Failures** — CI surfaces SAST/secret/dependency
+  alerts. The app now emits structured JSON logs and CloudWatch metrics
+  (`box/telemetry.py`) with a CloudWatch dashboard + alarms
+  (`agent/infra/cdk/`); log fields are passed through a secret-redaction filter.
+  Full audit logging (actor attribution on `resolve-review`) remains tied to the
+  F1 authz work.
 
 ## Controls in place
 

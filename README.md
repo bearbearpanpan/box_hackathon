@@ -122,7 +122,14 @@ converges to a safe timeline → GREEN) and a clean deal (auto-approved, no huma
 python3 agent/lambda/tools/test_comparison.py          # 5/5  (risk engine)
 python3 agent/lambda/tools/test_workflow.py             # 10/10 (notes, loop, reviewer paths)
 python3 agent/lambda/tools/features/test_features.py    # 6/6  (the 5 wow features)
+python3 agent/lambda/tools/test_integration_e2e.py      # 7/7  (full pipeline + metric emissions)
 ```
+
+The integration test drives the full `handler.run_action` dispatch (the same
+path the Lambda uses) and asserts on both functional outcomes and the telemetry
+metrics the CloudWatch dashboard reads. It runs offline by default; set
+`RC_E2E_LIVE_CW=1` (with AWS creds + the deployed observability stack) to also
+round-trip a canary metric through live CloudWatch.
 
 ## "Wow" features (see [ROADMAP.md](./ROADMAP.md))
 

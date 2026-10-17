@@ -40,7 +40,29 @@ import report as report_tool  # noqa: E402
 import risk_signals          # noqa: E402
 import approvals             # noqa: E402
 
+from telemetry import get_logger, log_event, emit_metric  # noqa: E402
+
+_log = get_logger("reality_check.workflow")
+
 MAX_ITERATIONS = 5
+
+
+def _log_loop_outcome(entry: str, status: str, iterations: List[Dict[str, Any]]) -> None:
+    """Emit the agentic-loop KPIs — the numbers operations actually cares about:
+    how many passes it took, where it ended up, and whether a human was needed.
+    Pure telemetry; does not touch the workflow result."""
+    final = iterations[-1] if iterations else {}
+    final_risk = final.get("overall_risk")
+    escalations = len(final.get("escalations", []))
+    log_event(_log, "workflow.outcome", entry=entry, status=status,
+              iterations_run=len(iterations), final_risk=final_risk,
+              open_escalations=escalations)
+    emit_metric("WorkflowRun", 1, "Count", status=status)
+    emit_metric("WorkflowIterations", len(iterations), "Count")
+    if status == "needs_human_approval":
+        emit_metric("WorkflowNeedsHuman", 1, "Count")
+    if final_risk:
+        emit_metric("WorkflowFinalRisk", 1, "Count", risk=final_risk)
 
 
 def _history():
@@ -159,6 +181,8 @@ def run_workflow(notes: str, hard_promises: Dict[str, Any] | None = None,
             draft["promised_days"] = safe
 
     status, draft, iterations = _iterate(draft, history, hard_promises)
+
+    _log_loop_outcome("run_workflow", status, iterations)
 
     result = {
         "status": status,
@@ -311,6 +335,8 @@ def resume_from_review(review_id: str, auto_upload: bool = True) -> Dict[str, An
         prior_iterations=record.get("iteration_log", []),
         acknowledged=acknowledged,
     )
+
+    _log_loop_outcome("resume_from_review", status, iterations)
 
     result = {
         "status": status,
