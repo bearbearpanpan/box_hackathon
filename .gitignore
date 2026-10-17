@@ -22,8 +22,5 @@ build/
 .idea/
 .vscode/
 
-# Generated reports (regenerated at runtime)
-data/reports/
-
-# Review store (regenerated at runtime)
-data/reviews/
+# Offline review reports
+reports/

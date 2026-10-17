@@ -1,7 +1,0 @@
-# Runtime dependencies for the Reality Check Lambda / tools.
-# NOTE: the PDF generation (minipdf) and comparison engine have NO dependencies.
-# These are only needed for live Box + Bedrock calls.
-
-boto3>=1.39.0        # AWS Bedrock runtime (deep_research narrative, agent invoke); >=1.39 supports AWS_BEARER_TOKEN_BEDROCK auth
-botocore>=1.39.0     # pinned alongside boto3 for Bedrock bearer-token (API key) support
-boxsdk>=10.0.0       # Box API, imported as box_sdk_gen (list/download/upload, metadata, tasks, Box AI)
