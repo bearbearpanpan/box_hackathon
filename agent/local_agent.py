@@ -17,8 +17,9 @@ import envload  # noqa: E402
 from minipdf import PdfDoc  # noqa: E402
 
 envload.load_env()
-if not os.environ.get("AWS_BEARER_TOKEN_BEDROCK") and os.environ.get("BEDROCK_AGENT_API_KEY"):
-    os.environ["AWS_BEARER_TOKEN_BEDROCK"] = os.environ["BEDROCK_AGENT_API_KEY"]
+
+MODEL_ID = os.environ.get("BEDROCK_MODEL_ID", "us.anthropic.claude-sonnet-4-6")
+REGION = os.environ.get("AWS_REGION", "us-east-1")
 
 RESULTS = ["No risk", "Risk identified", "No source found"]
 CATEGORIES = ["Feature availability", "Delivery deadline", "Performance commitment"]
@@ -73,7 +74,7 @@ class BoxDocs:
     def __init__(self) -> None:
         from box_client import BoxClient
         self.client = BoxClient()
-        self.contracts_folder = os.environ["BOX_CONTRACTS_FOLDER_ID"]
+        self.contracts_folder = os.environ["BOX_REVIEW_CONTRACTS_FOLDER_ID"]
         self.evidence_folder = os.environ["BOX_EVIDENCE_FOLDER_ID"]
         self.reports_folder = os.environ["BOX_REPORTS_FOLDER_ID"]
 
@@ -96,9 +97,9 @@ class BoxDocs:
 
 
 def get_docs(offline: bool = False):
-    has_auth = os.environ.get("BOX_DEVELOPER_TOKEN") or os.environ.get("BOX_ENTERPRISE_ID")
+    has_auth = all(os.environ.get(k) for k in ("BOX_CLIENT_ID", "BOX_CLIENT_SECRET", "BOX_ENTERPRISE_ID"))
     has_folders = all(os.environ.get(k) for k in
-                      ("BOX_CONTRACTS_FOLDER_ID", "BOX_EVIDENCE_FOLDER_ID", "BOX_REPORTS_FOLDER_ID"))
+                      ("BOX_REVIEW_CONTRACTS_FOLDER_ID", "BOX_EVIDENCE_FOLDER_ID", "BOX_REPORTS_FOLDER_ID"))
     if not offline and has_auth and has_folders:
         return BoxDocs()
     return LocalDocs()
@@ -106,7 +107,7 @@ def get_docs(offline: bool = False):
 
 def bedrock():
     import boto3
-    return boto3.client("bedrock-runtime", region_name=os.environ.get("AWS_REGION", "us-east-1"))
+    return boto3.client("bedrock-runtime", region_name=REGION)
 
 
 REVIEW_SYSTEM = """You review a proposed sales contract before it is shared or signed. You never draft or rewrite contracts.
@@ -156,7 +157,7 @@ def llm_review(client, contract_name: str, contract_text: str, sources: List[Dic
     for s in sources:
         blocks.append(f"SOURCE {s['ref']}: {s['name']} (last updated {s['last_updated']})\n{s['text']}")
     resp = client.converse(
-        modelId=os.environ["BEDROCK_MODEL_ID"],
+        modelId=MODEL_ID,
         system=[{"text": REVIEW_SYSTEM}],
         messages=[{"role": "user", "content": [{"text": "\n\n---\n\n".join(blocks)}]}],
         toolConfig={"tools": [REVIEW_TOOL], "toolChoice": {"tool": {"name": "submit_review"}}},
@@ -235,7 +236,7 @@ def review_contract(docs, contract_name: str, client=None) -> Dict[str, Any]:
     claims = score(llm_review(client or bedrock(), contract["name"], contract_text, sources))
     counts = summarize(claims)
     pdf = build_report(contract, claims, counts, sources)
-    name = f"Risk Review - {contract['name'].rsplit('.', 1)[0]} - {datetime.now().strftime('%Y%m%d-%H%M%S')}.pdf"
+    name = f"Risk Review - {contract['name'].rsplit('.', 1)[0]}.pdf"
     report = docs.upload_report(name, pdf)
     return {
         "contract": contract["name"],
@@ -267,18 +268,15 @@ CHAT_TOOLS = [
 
 
 def run_tool(docs, name: str, args: Dict[str, Any], client) -> Dict[str, Any]:
-    try:
-        if name == "list_contracts":
-            return {"contracts": [c["name"] for c in docs.contracts()]}
-        if name == "review_contract":
-            return review_contract(docs, args.get("contract_name", ""), client)
-        return {"error": f"Unknown tool {name}"}
-    except Exception as exc:
-        return {"error": f"{type(exc).__name__}: {exc}"}
+    if name == "list_contracts":
+        return {"contracts": [c["name"] for c in docs.contracts()]}
+    if name == "review_contract":
+        return review_contract(docs, args.get("contract_name", ""), client)
+    raise ValueError(f"unknown tool {name}")
 
 
 def chat(docs, client) -> None:
-    print(f"Reality Check agent ({docs.kind} documents, model {os.environ.get('BEDROCK_MODEL_ID')}). Type 'exit' to quit.")
+    print(f"Reality Check contract review ({docs.kind} documents, {MODEL_ID}). Type 'quit' to exit.")
     messages: List[Dict[str, Any]] = []
     while True:
         try:
@@ -291,22 +289,25 @@ def chat(docs, client) -> None:
             continue
         messages.append({"role": "user", "content": [{"text": user}]})
         while True:
-            resp = client.converse(modelId=os.environ["BEDROCK_MODEL_ID"], system=[{"text": CHAT_SYSTEM}],
+            resp = client.converse(modelId=MODEL_ID, system=[{"text": CHAT_SYSTEM}],
                                    messages=messages, toolConfig={"tools": CHAT_TOOLS},
                                    inferenceConfig={"maxTokens": 2000})
             msg = resp["output"]["message"]
             messages.append(msg)
-            uses = [b["toolUse"] for b in msg["content"] if "toolUse" in b]
             for b in msg["content"]:
                 if "text" in b and b["text"].strip():
-                    print(f"\nagent> {b['text']}")
-            if not uses:
+                    print(f"\nagent> {b['text'].strip()}\n")
+            if resp["stopReason"] != "tool_use":
                 break
             results = []
-            for u in uses:
-                print(f"  [tool] {u['name']} {json.dumps(u['input'])}")
-                out = run_tool(docs, u["name"], u["input"], client)
-                results.append({"toolResult": {"toolUseId": u["toolUseId"], "content": [{"json": out}]}})
+            for u in [b["toolUse"] for b in msg["content"] if "toolUse" in b]:
+                print(f"  [tool] {u['name']} {json.dumps(u['input'])}", flush=True)
+                try:
+                    out = json.loads(json.dumps(run_tool(docs, u["name"], u["input"], client), default=str))
+                    results.append({"toolResult": {"toolUseId": u["toolUseId"], "content": [{"json": out}]}})
+                except Exception as exc:
+                    results.append({"toolResult": {"toolUseId": u["toolUseId"], "status": "error",
+                                                   "content": [{"text": f"{type(exc).__name__}: {exc}"}]}})
             messages.append({"role": "user", "content": results})
 
 

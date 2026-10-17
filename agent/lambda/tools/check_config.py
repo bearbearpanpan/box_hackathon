@@ -73,8 +73,9 @@ def _check_box() -> tuple[bool, str]:
         sys.path.insert(0, box_dir)
         from box_client import BoxClient
         c = BoxClient()
+        who = c.whoami()
         files = c.list_contracts()
-        return True, f"listed {len(files)} file(s) in contracts folder"
+        return True, f"authenticated as {who}; listed {len(files)} PDF(s) in contracts folder {c.contracts_folder}"
     except Exception as exc:
         return False, f"{type(exc).__name__}: {exc}"
 
