@@ -1,20 +1,22 @@
 # PRD: Sales Contract Risk Review
 
+**Help sales teams identify risks before making commitments to customers.**
+
 ## Sample scenario: an enterprise deal for Amazon S3
 
-An AWS field team is helping an enterprise customer move its document archive to Amazon S3. The proposed customer agreement includes commitments about required storage features, migration completion, and retrieval performance.
+An AWS field team is helping an enterprise customer move its document archive to Amazon S3. The draft customer agreement proposes commitments about required storage features, migration completion, and retrieval performance.
 
-Before sharing the agreement, the account team needs to know: **Which claims can we substantiate, and which need revision or confirmation from product and operations?**
+Before making these commitments to the customer, the account team needs to know: **Which proposed claims carry risks, and what evidence supports that assessment?**
 
 ## Problem
 
-Sales and field teams make customer commitments about features, delivery dates, and performance without easy access to reliable delivery information. They repeatedly follow up with product and operations teams, or make claims based on incomplete or outdated information.
+Sales and field teams need to identify risks in proposed features, delivery dates, and performance claims before making commitments to customers. Today, this requires piecing together scattered documents and ad hoc answers from product and operations. That manual process can leave risks undiscovered when a commitment is made.
 
-In the S3 deal, the account team might promise a feature by the customer’s launch date without knowing whether its required configuration is supported or whether the migration team can meet that deadline. This creates a gap between what the contract promises and what the business can support.
+In the S3 deal, the account team needs to catch an unavailable feature, an unrealistic migration deadline, or an unsupported throughput promise while the agreement is still a draft.
 
 ## Product objective
 
-Review a proposed sales contract before it is shared or signed. Identify customer-facing claims that conflict with—or lack support from—the company's product plans, delivery history, and approved capabilities. Give the field team a clear explanation and supporting evidence for each risk.
+**Help sales identify risky claims before committing to them.** Review a draft sales contract against product documentation, roadmaps, and past delivery data in Box. For each claim, show whether it matches the evidence, carries a categorized risk, or has no source available.
 
 **Primary user:** A salesperson or field team member preparing a customer contract.
 
@@ -22,7 +24,7 @@ Review a proposed sales contract before it is shared or signed. Identify custome
 
 ## User input
 
-**One current sales contract to review.**
+**One draft sales contract, submitted before making the proposed commitments to the customer.**
 
 The user uploads the contract, including any referenced schedules or attachments that contain customer commitments. The review covers claims about feature availability, delivery deadlines, and performance.
 
@@ -101,7 +103,7 @@ Severity is fixed by category. No source found means the claim could not be veri
 
 ## V1 scope
 
-V1 reviews one contract at a time against the three risk categories and returns a result for every in-scope claim against the three prioritized Box sources. It supports an initial review and a fresh review of a revised contract.
+V1 reviews one draft contract at a time, before customer commitments are made, against the three risk categories and returns a result for every in-scope claim against the three prioritized Box sources. It supports an initial review and a fresh review of a revised contract.
 
 Service-level, support, security, and compliance reviews are outside V1.
 
@@ -109,12 +111,12 @@ Contract drafting, automatic contract changes, approval routing, negotiation, si
 
 ## Success metrics
 
-**North star — Contract review time saved:** Percentage reduction in median time to complete a contract review versus the manual process, including product and operations follow-ups.
+**North star — Risks caught before commitment:** Percentage of expert-identified risky claims in draft contracts that the system flags before sales makes the customer commitment.
 
 | Supporting metric | Definition |
 |---|---|
 | **Risk precision** | Percentage of flagged claims that expert reviewers confirm should be flagged. |
-| **Risk recall** | Percentage of expert-identified risky claims that the system flags. |
+| **Review time saved** | Percentage reduction in median review time versus the manual process, including product and operations follow-ups. |
 | **Source accuracy** | Percentage of claim results whose cited evidence—or No source found result—is confirmed correct by expert reviewers. |
 
 Measure quality on an expert-reviewed set of contracts across all three risk categories. Establish the manual baseline and pilot targets before launch.
@@ -123,9 +125,9 @@ Measure quality on an expert-reviewed set of contracts across all three risk cat
 
 *Illustrative only. The customer, feature names, source documents, and figures below are fictional, not actual AWS commitments.*
 
-### Input: customer contract
+### Input: draft customer contract
 
-**Document:** Northstar Archive Migration Agreement
+**Document:** Northstar Archive Migration Agreement — Draft
 
 **Scope:** Move Northstar’s document archive to Amazon S3 in the agreed Region and configuration.
 
@@ -144,7 +146,7 @@ flowchart LR
     C --> D[Claim-by-claim report]
 ```
 
-The user submits the contract. The system uses the connected Box documents and returns the report below.
+Before making the proposed customer commitments, the salesperson submits the draft. The system uses the connected Box documents and returns the report below.
 
 ### Output: contract review report
 
