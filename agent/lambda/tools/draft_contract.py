@@ -87,9 +87,10 @@ def draft_contract(params: Dict[str, Any]) -> Dict[str, Any]:
 
     # Promised delivery default based on complexity
     promised_days = params.get("promised_days")
+    timeline_is_default = promised_days is None
     if promised_days is None:
         promised_days = 30 + (40 if has_hardware else 0)
-        assumptions.append(f"promised delivery defaulted to {promised_days} days")
+        assumptions.append(f"promised delivery defaulted to {promised_days} days (no date given)")
 
     sla = next((t for t in C.SLA_TIERS if t[0] == sla_tier), C.SLA_TIERS[2])
 
@@ -116,6 +117,8 @@ def draft_contract(params: Dict[str, Any]) -> Dict[str, Any]:
         "compliance_pack": compliance_pack,
         "promised_days": promised_days,
         "actual_days": None,  # unknown for a draft
+        "timeline_is_default": timeline_is_default,
+        "timeline_flexible": bool(params.get("_timeline_flexible")),
     }
 
     return {"draft": draft, "assumptions": assumptions, "body": _render_body(draft)}

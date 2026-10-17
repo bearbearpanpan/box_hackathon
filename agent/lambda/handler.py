@@ -66,6 +66,14 @@ def run_action(action: str, params: Dict[str, Any]) -> Dict[str, Any]:
     if action == "analyze-and-report":
         return analyze_and_report(params)
 
+    if action == "run-workflow":
+        import workflow
+        return workflow.run_workflow(
+            notes=params.get("notes", ""),
+            hard_promises=params.get("hard_promises"),
+            auto_upload=params.get("auto_upload", True),
+        )
+
     raise ValueError(f"Unknown action: {action}")
 
 
