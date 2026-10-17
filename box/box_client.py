@@ -81,6 +81,13 @@ class BoxClient:
                 "Install it with `pip install boxsdk` and set Box credentials."
             ) from exc
 
+        token = os.environ.get("BOX_DEVELOPER_TOKEN")
+        if token:
+            from boxsdk import OAuth2  # type: ignore
+            auth = OAuth2(client_id=self.client_id, client_secret=self.client_secret, access_token=token)
+            self._client = Client(auth)
+            return self._client
+
         auth = CCGAuth(
             client_id=_require("BOX_CLIENT_ID"),
             client_secret=_require("BOX_CLIENT_SECRET"),
@@ -95,6 +102,14 @@ class BoxClient:
         fid = folder_id or self.contracts_folder
         items = client.folder(fid).get_items()
         return [BoxFile(id=i.id, name=i.name) for i in items if i.name.lower().endswith(".pdf")]
+
+    def list_files(self, folder_id: str, ext: str = ".pdf") -> List[BoxFile]:
+        client = self._connect()
+        items = client.folder(folder_id).get_items()
+        return [BoxFile(id=i.id, name=i.name) for i in items if i.type == "file" and i.name.lower().endswith(ext)]
+
+    def download_bytes(self, file_id: str) -> bytes:
+        return self._connect().file(file_id).content()
 
     def download_text(self, file_id: str) -> str:
         """Download a file's bytes. (PDF text parsing is done by the caller /

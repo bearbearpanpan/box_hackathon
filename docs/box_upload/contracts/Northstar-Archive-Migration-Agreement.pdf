@@ -1,0 +1,93 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [6 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Length 1685 >>
+stream
+BT
+/F2 16.0 Tf
+1 0 0 1 60.0 722.0 Tm
+(Northstar Archive Migration Agreement) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 696.0 Tm
+(Draft for internal review | Customer: Northstar Financial Group | Prepared by: Field Sales) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 682.0 Tm
+(Team | Date: October 16, 2026) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 662.0 Tm
+(Fictional demo data.) Tj
+/F2 12.0 Tf
+1 0 0 1 60.0 622.0 Tm
+(Scope) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 600.0 Tm
+(Move Northstar's 600 TB document archive to the Archive Storage service. Agreed Region and) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 586.0 Tm
+(configuration: Archive tier, US-West \(Oregon\), objects 1-50 MB.) Tj
+/F2 12.0 Tf
+1 0 0 1 60.0 546.0 Tm
+(Commitments) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 524.0 Tm
+(1. Encryption: The archive will support encryption at rest in the agreed configuration.) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 504.0 Tm
+(2. Feature: The archive will include the proposed Smart Archive Search feature at launch.) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 484.0 Tm
+(3. Delivery: The archive migration will be completed within 30 days of signature.) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 464.0 Tm
+(4. Performance: The archive will sustain read throughput of 10 GB/s in the agreed) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 450.0 Tm
+(configuration.) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 430.0 Tm
+(5. Integration: The archive will support direct import from Northstar's LegacyVault system.) Tj
+/F2 12.0 Tf
+1 0 0 1 60.0 390.0 Tm
+(Commercials) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 368.0 Tm
+(Term: 36 months. Committed spend: $1,200,000. Payment terms: Net 30.) Tj
+/F2 12.0 Tf
+1 0 0 1 60.0 328.0 Tm
+(Signatures) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 306.0 Tm
+(Northstar Financial Group: ____________________   Provider: ____________________) Tj
+ET
+
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 5 0 R >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000121 00000 n 
+0000000191 00000 n 
+0000000266 00000 n 
+0000002003 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+2139
+%%EOF

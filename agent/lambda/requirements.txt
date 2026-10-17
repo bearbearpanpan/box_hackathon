@@ -4,4 +4,4 @@
 
 boto3>=1.39.0        # AWS Bedrock runtime (deep_research narrative, agent invoke); >=1.39 supports AWS_BEARER_TOKEN_BEDROCK auth
 botocore>=1.39.0     # pinned alongside boto3 for Bedrock bearer-token (API key) support
-boxsdk>=3.9.0        # Box API (list/download/upload, metadata, tasks, Box AI)
+boxsdk>=3.9.0,<10    # Box API (list/download/upload, metadata, tasks, Box AI)
