@@ -56,57 +56,76 @@ def _apply_action(draft: Dict[str, Any], action: Dict[str, Any]) -> Tuple[bool, 
 
 
 def revise(draft: Dict[str, Any], risk_report: Dict[str, Any],
-           signals: List[Dict[str, Any]], hard_promises: Dict[str, Any] | None = None
+           signals: List[Dict[str, Any]], hard_promises: Dict[str, Any] | None = None,
+           acknowledged: set | None = None
            ) -> Dict[str, Any]:
     """
     Produce a revised draft. `hard_promises` are commitments the rep locked in
     from the meeting (e.g. {"promised_days": 60}) that the agent must NOT soften
     without human sign-off — these become escalations instead of auto-fixes.
+
+    `acknowledged` is a set of signal ids a human reviewer has already seen and
+    accepted (e.g. "yes, I know Meridian is risky, proceed"). Advisory signals
+    in this set are recorded as acknowledged notes instead of re-blocking the
+    loop, so a resumed workflow can actually finish.
+
+    Escalations are tagged `blocking` (must be resolved by a human) vs
+    `advisory` (informational; can be acknowledged). Only blocking escalations
+    stop the loop.
     """
     hard_promises = hard_promises or {}
+    acknowledged = acknowledged or set()
     revised = dict(draft)
     changes: List[Dict[str, Any]] = []
     escalations: List[Dict[str, Any]] = []
+    acknowledged_notes: List[Dict[str, Any]] = []
 
     # 1) Apply machine-applicable external signal actions.
     for sig in signals:
         action = sig.get("action")
         if not action:
-            escalations.append({
+            # Advisory signal (no machine fix). If already acknowledged, note it;
+            # otherwise surface it as an advisory escalation.
+            note = {
                 "source": sig["id"], "severity": sig["severity"],
-                "issue": sig["title"],
-                "needs_human": sig["recommended_action"],
-            })
+                "issue": sig["title"], "needs_human": sig["recommended_action"],
+                "kind": "advisory",
+            }
+            if sig["id"] in acknowledged:
+                acknowledged_notes.append(note)
+            else:
+                escalations.append(note)
             continue
 
         field = action["field"]
         # Guard: don't override a hard customer promise without a human.
         if field in hard_promises and action["op"] in ("set", "max_cap"):
-            escalations.append({
+            note = {
                 "source": sig["id"], "severity": sig["severity"],
-                "issue": sig["title"],
+                "issue": sig["title"], "kind": "blocking",
                 "needs_human": (
                     f"{sig['recommended_action']} — but the rep committed "
                     f"{field}={hard_promises[field]} in the meeting; needs approval to change."
                 ),
-            })
+            }
+            (acknowledged_notes if sig["id"] in acknowledged else escalations).append(note)
             continue
 
         # Special case: timeline floor/buffer conflicts with a hard promised date.
         if field == "promised_days" and "promised_days" in hard_promises \
                 and action["op"] in ("min_floor", "add"):
-            # We can still *recommend* the safer number but flag the conflict.
             proposed = _preview(revised.get("promised_days"), action)
             if proposed > hard_promises["promised_days"]:
-                escalations.append({
+                note = {
                     "source": sig["id"], "severity": sig["severity"],
-                    "issue": sig["title"],
+                    "issue": sig["title"], "kind": "blocking",
                     "needs_human": (
                         f"History/supplier says >= {proposed} days, but the rep "
                         f"promised {hard_promises['promised_days']} days to the "
                         f"customer. Approve the later date or get an exception."
                     ),
-                })
+                }
+                (acknowledged_notes if sig["id"] in acknowledged else escalations).append(note)
                 continue
 
         changed, desc = _apply_action(revised, action)
@@ -116,16 +135,32 @@ def revise(draft: Dict[str, Any], risk_report: Dict[str, Any],
 
     # 2) Escalate any HIGH history/static risk that has no machine action.
     for r in risk_report.get("risks", []):
-        if r["severity"] == "HIGH" and not _was_addressed(r, changes):
-            # history timeline risk is addressed via the signal floor if applied
-            if r["id"] == "R-HISTORY-TIMELINE" and any(c["change"].startswith("promised_days") for c in changes):
+        if r["severity"] == "HIGH":
+            # history timeline risk is addressed if we changed the timeline
+            if r["id"] == "R-HISTORY-TIMELINE" and (
+                any(c["change"].startswith("promised_days") for c in changes)
+                or r["id"] in acknowledged
+            ):
                 continue
-            escalations.append({
+            note = {
                 "source": r["id"], "severity": r["severity"],
                 "issue": r["title"], "needs_human": r.get("mitigation", "Review required."),
-            })
+                "kind": "advisory",
+            }
+            (acknowledged_notes if r["id"] in acknowledged else escalations).append(note)
 
-    return {"revised_draft": revised, "changes": changes, "escalations": escalations}
+    # Only BLOCKING escalations stop the loop. Advisory ones are surfaced but,
+    # once acknowledged, won't block. For the first pass (nothing acknowledged)
+    # everything shows up so the reviewer sees the full picture.
+    blocking = [e for e in escalations if e.get("kind") == "blocking"]
+
+    return {
+        "revised_draft": revised,
+        "changes": changes,
+        "escalations": escalations,
+        "blocking_escalations": blocking,
+        "acknowledged_notes": acknowledged_notes,
+    }
 
 
 def _preview(cur, action) -> int:

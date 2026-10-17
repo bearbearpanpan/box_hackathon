@@ -24,3 +24,6 @@ build/
 
 # Generated reports (regenerated at runtime)
 data/reports/
+
+# Review store (regenerated at runtime)
+data/reviews/

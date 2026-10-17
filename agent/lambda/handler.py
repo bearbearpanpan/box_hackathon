@@ -72,6 +72,33 @@ def run_action(action: str, params: Dict[str, Any]) -> Dict[str, Any]:
             notes=params.get("notes", ""),
             hard_promises=params.get("hard_promises"),
             auto_upload=params.get("auto_upload", True),
+            open_review=params.get("open_review", True),
+        )
+
+    if action == "get-review":
+        import approvals
+        rec = approvals.get_review(params["review_id"])
+        return rec or {"error": f"review {params.get('review_id')} not found"}
+
+    if action == "list-reviews":
+        import approvals
+        return {"reviews": approvals.list_reviews(params.get("status"))}
+
+    if action == "resolve-review":
+        import approvals
+        return approvals.resolve_review(
+            review_id=params["review_id"],
+            decision=params["decision"],
+            reviewer=params.get("reviewer", "reviewer"),
+            note=params.get("note", ""),
+            requested_changes=params.get("requested_changes"),
+        )
+
+    if action == "resume-workflow":
+        import workflow
+        return workflow.resume_from_review(
+            review_id=params["review_id"],
+            auto_upload=params.get("auto_upload", True),
         )
 
     raise ValueError(f"Unknown action: {action}")
