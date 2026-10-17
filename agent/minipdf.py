@@ -30,8 +30,22 @@ CONTENT_W = PAGE_W - 2 * MARGIN
 _HELV_AVG = 0.52     # average advance width as a fraction of font size
 
 
+_UNICODE = {
+    "\u2018": "'", "\u2019": "'", "\u201c": '"', "\u201d": '"', "\u2013": "-", "\u2014": "-",
+    "\u2026": "...", "\u2192": "->", "\u2264": "<=", "\u2265": ">=", "\u00a0": " ", "\u2022": "-",
+    "\u2212": "-", "\u00d7": "x",
+}
+
+
+def _clean(text: str) -> str:
+    for k, v in _UNICODE.items():
+        text = text.replace(k, v)
+    return text
+
+
 def _esc(text: str) -> str:
     """Escape characters that are special inside a PDF string literal."""
+    text = _clean(text)
     return text.replace("\\", r"\\").replace("(", r"\(").replace(")", r"\)")
 
 
@@ -68,62 +82,99 @@ def _wrap(text: str, size: float, max_w: float) -> List[str]:
     return out
 
 
-class _Op:
-    """A single text draw instruction, resolved at render time."""
-    __slots__ = ("text", "size", "bold", "gap_before")
+Color = Tuple[float, float, float]
+BLACK: Color = (0.0, 0.0, 0.0)
 
-    def __init__(self, text: str, size: float, bold: bool, gap_before: float):
+
+class _Op:
+    """A single draw instruction, resolved at render time."""
+    __slots__ = ("kind", "text", "size", "bold", "gap_before", "color", "indent", "fill")
+
+    def __init__(self, text: str, size: float, bold: bool, gap_before: float, color: Color = BLACK,
+                 indent: float = 0, kind: str = "text", fill: Color = BLACK):
+        self.kind = kind
         self.text = text
         self.size = size
         self.bold = bold
         self.gap_before = gap_before
+        self.color = color
+        self.indent = indent
+        self.fill = fill
 
 
 class PdfDoc:
-    def __init__(self):
+    def __init__(self, margin: float = MARGIN):
         self._ops: List[_Op] = []
+        self.margin = margin
+        self.width = PAGE_W - 2 * margin
 
     # ---- content API --------------------------------------------------------
-    def add_heading(self, text: str, size: float = 16):
-        self._ops.append(_Op(text, size, True, gap_before=10))
+    def add_heading(self, text: str, size: float = 16, color: Color = BLACK):
+        self._ops.append(_Op(text, size, True, gap_before=10, color=color))
 
-    def add_subheading(self, text: str, size: float = 12):
-        self._ops.append(_Op(text, size, True, gap_before=8))
+    def add_subheading(self, text: str, size: float = 12, color: Color = BLACK):
+        self._ops.append(_Op(text, size, True, gap_before=8, color=color))
 
-    def add_paragraph(self, text: str, size: float = 10):
-        self._ops.append(_Op(text, size, False, gap_before=6))
+    def add_paragraph(self, text: str, size: float = 10, color: Color = BLACK):
+        self._ops.append(_Op(text, size, False, gap_before=6, color=color))
 
     def add_keyvalue(self, key: str, value: str, size: float = 10):
         self._ops.append(_Op(f"{key}: {value}", size, False, gap_before=2))
 
+    def add_text(self, text: str, size: float = 10, bold: bool = False, color: Color = BLACK,
+                 indent: float = 0, gap_before: float = 4):
+        self._ops.append(_Op(text, size, bold, gap_before, color=color, indent=indent))
+
+    def add_band(self, text: str, fill: Color, color: Color = (1.0, 1.0, 1.0), size: float = 12,
+                 gap_before: float = 8):
+        self._ops.append(_Op(text, size, True, gap_before, color=color, kind="band", fill=fill))
+
     def add_spacer(self, height: float = 8):
         self._ops.append(_Op("", 1, False, gap_before=height))
 
-    def add_rule(self):
-        # a simple ASCII separator row (keeps us within WinAnsi/latin-1 safely)
-        self._ops.append(_Op("-" * 80, 8, False, gap_before=4))
+    def add_rule(self, color: Color = (0.82, 0.82, 0.82)):
+        self._ops.append(_Op("", 1, False, gap_before=8, kind="rule", fill=color))
 
     # ---- rendering ----------------------------------------------------------
-    def _layout_pages(self) -> List[List[Tuple[float, float, str, float, bool]]]:
-        """Return pages; each page is a list of (x, y, text, size, bold)."""
-        pages: List[List[Tuple[float, float, str, float, bool]]] = []
-        cur: List[Tuple[float, float, str, float, bool]] = []
-        y = PAGE_H - MARGIN
+    def _layout_pages(self) -> List[List[tuple]]:
+        """Return pages; each page is a list of draw commands:
+        ("t", x, y, text, size, bold, color) or ("r", x, y, w, h, color)."""
+        pages: List[List[tuple]] = []
+        cur: List[tuple] = []
+        y = PAGE_H - self.margin
 
         def newpage():
             nonlocal cur, y
             if cur:
                 pages.append(cur)
             cur = []
-            y = PAGE_H - MARGIN
+            y = PAGE_H - self.margin
 
         for op in self._ops:
-            leading = op.size + 4 if op.size > 1 else LINE_H
             y -= op.gap_before
-            for line in _wrap(op.text, op.size if op.size > 1 else 10, CONTENT_W):
-                if y - leading < MARGIN:
+            if op.kind == "rule":
+                if y - 6 < self.margin:
                     newpage()
-                cur.append((MARGIN, y, line, op.size, op.bold))
+                cur.append(("r", self.margin, y, self.width, 0.8, op.fill))
+                y -= 8
+                continue
+            if op.kind == "band":
+                lines = _wrap(op.text, op.size, self.width - 20)
+                h = len(lines) * (op.size + 4) + 12
+                if y - h < self.margin:
+                    newpage()
+                cur.append(("r", self.margin, y - h, self.width, h, op.fill))
+                ty = y - 6 - op.size
+                for line in lines:
+                    cur.append(("t", self.margin + 10, ty, line, op.size, True, op.color))
+                    ty -= op.size + 4
+                y -= h
+                continue
+            leading = op.size + 4 if op.size > 1 else LINE_H
+            for line in _wrap(op.text, op.size if op.size > 1 else 10, self.width - op.indent):
+                if y - leading < self.margin:
+                    newpage()
+                cur.append(("t", self.margin + op.indent, y - op.size, line, op.size, op.bold, op.color))
                 y -= leading
         if cur:
             pages.append(cur)
@@ -158,20 +209,17 @@ class PdfDoc:
             page_obj_ids.append(page_id)
 
             stream = io.StringIO()
-            stream.write("BT\n")
-            prev_font_bold = None
-            for (x, y, text, size, bold) in page:
+            for cmd in page:
+                if cmd[0] == "r":
+                    _, x, y, w, h, (r, g, b) = cmd
+                    stream.write(f"{r:.3f} {g:.3f} {b:.3f} rg {x:.1f} {y:.1f} {w:.1f} {h:.1f} re f\n")
+                    continue
+                _, x, y, text, size, bold, (r, g, b) = cmd
                 if text == "":
                     continue
-                if bold != prev_font_bold:
-                    fname = "F2" if bold else "F1"
-                    stream.write(f"/{fname} {size:.1f} Tf\n")
-                    prev_font_bold = bold
-                else:
-                    stream.write(f"/{'F2' if bold else 'F1'} {size:.1f} Tf\n")
-                stream.write(f"1 0 0 1 {x:.1f} {y:.1f} Tm\n")
-                stream.write(f"({_esc(text)}) Tj\n")
-            stream.write("ET\n")
+                stream.write(f"BT /{'F2' if bold else 'F1'} {size:.1f} Tf {r:.3f} {g:.3f} {b:.3f} rg "
+                             f"1 0 0 1 {x:.1f} {y:.1f} Tm\n")
+                stream.write(f"({_esc(text)}) Tj\nET\n")
             body = stream.getvalue().encode("latin-1", "replace")
 
             content = (
