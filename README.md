@@ -66,6 +66,56 @@ The 100-contract history is noisy but biased so the agent discovers:
 
 See `data/catalog.py` and `RULES.md`.
 
+## The agentic workflow (meeting notes → signed-off contract)
+
+The headline feature. One input (messy sales-call notes), a fully autonomous
+loop, and a human only when a human is actually needed:
+
+```
+meeting notes
+  → extract deal intent          (notes_parser)
+  → draft contract               (draft_contract)
+  → review & flag risks          (raise_risks + external risk_signals)
+  → revise: auto-fix what's safe (revise: discount caps, buffers, compliance)
+  → loop until converged OR a hard customer promise needs human approval
+  → open a REVIEW the deal desk opens, then approve / reject / request changes
+  → resume from the decision and loop again until it clears
+  → final report PDF + review task
+```
+
+**The agent generates its own risk signals** (not just what's in the deal):
+supplier delay notices, SLA-credit history, Q4 freight advisories, and
+compliance alerts — see `data/risk_signals.py`.
+
+**Human-in-the-loop is real.** When a deal needs sign-off, the agent opens a
+review package (`approvals.py`); a reviewer opens it, and can **approve as-is**
+(owns the risk), **reject** (walk away), or **request changes** (accept the
+agent's safer proposal or set their own number). The workflow resumes from that
+decision. All four paths are tested.
+
+### See the whole story in one command
+
+```bash
+python3 demo.py            # narrated walkthrough (--fast to skip pauses)
+```
+It runs a hard deal (undeliverable 60-day promise → RED → human loops in →
+converges to a safe timeline → GREEN) and a clean deal (auto-approved, no human).
+
+### Workflow actions (via the Lambda/CLI or Bedrock)
+
+| Action | What it does |
+|---|---|
+| `run-workflow` | notes → draft → loop; opens a review if a human is needed |
+| `get-review` / `list-reviews` | what the reviewer sees when they open the doc |
+| `resolve-review` | reviewer decision: approve / reject / request_changes |
+| `resume-workflow` | continue from the decision until it clears |
+
+### Tests (every path)
+```bash
+python3 agent/lambda/tools/test_comparison.py   # 5/5  (risk engine)
+python3 agent/lambda/tools/test_workflow.py      # 10/10 (notes, loop, all reviewer paths)
+```
+
 ## Run it right now (no keys needed)
 
 The pipeline auto-detects: if Box credentials are set it uses Box; otherwise it

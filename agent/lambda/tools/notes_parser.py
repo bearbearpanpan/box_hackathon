@@ -165,12 +165,20 @@ def _rule_based(notes: str) -> Dict[str, Any]:
     ]
     seen = set()
     for kws, sku, default_qty in kw_to_sku:
-        for kw in kws:
-            if kw in low and sku not in seen:
-                qty = _qty_for(low, kw, default_qty)
-                items.append({"sku": sku, "qty": qty})
-                seen.add(sku)
+        present = [kw for kw in kws if kw in low]
+        if not present or sku in seen:
+            continue
+        # Among all matched keywords for this product, prefer an EXPLICIT count
+        # (a number that directly precedes a keyword) over the default. This
+        # makes "about 150 seats" win over the product name "core platform".
+        qty = default_qty
+        for kw in present:
+            found = _qty_for(low, kw, None)
+            if found is not None:
+                qty = found
                 break
+        items.append({"sku": sku, "qty": qty})
+        seen.add(sku)
     if items:
         params["line_items"] = items
 
@@ -181,17 +189,17 @@ def _rule_based(notes: str) -> Dict[str, Any]:
     return params
 
 
-def _qty_for(low: str, kw: str, default: int) -> int:
+def _qty_for(low: str, kw: str, default):
     """
     Find the count for a line item. Prefer a number that DIRECTLY precedes the
-    keyword (e.g. "2 GPU racks", "250 seats", "2 AccelGrid GPU racks"), which is
-    how people actually write quantities. Fall back to the keyword's default
-    rather than grabbing an unrelated nearby number.
+    keyword (e.g. "2 GPU racks", "about 150 seats", "250 users"), which is how
+    people actually write quantities. Returns `default` (which may be None) when
+    no explicit count is found, so the caller can try another keyword.
     """
     idx = low.find(kw)
     if idx == -1:
         return default
-    # look back up to ~25 chars for "<number> [adjective words] <kw>"
+    # look back up to ~25 chars for "<number> [filler words like 'about'] <kw>"
     prefix = low[max(0, idx - 25): idx]
     m = re.findall(r"(\d{1,5})(?:\s+[a-z]+){0,3}\s*$", prefix.replace(",", ""))
     if m:
