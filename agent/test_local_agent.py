@@ -50,6 +50,14 @@ def test_review_pipeline():
     assert os.path.isfile(out["report_link"])
 
 
+def test_match_contract_names():
+    cs = [{"name": "Northstar-Archive-Migration-Agreement-v2.pdf"}, {"name": "Northstar-Archive-Migration-Agreement.pdf"}]
+    assert la.match_contract(cs, "Northstar Archive Migration Agreement")["name"] == cs[1]["name"]
+    assert la.match_contract(cs, "the Northstar agreement")["name"] == cs[1]["name"]
+    assert la.match_contract(cs, "Northstar v2")["name"] == cs[0]["name"]
+    assert la.match_contract(cs, "Contoso deal") is None
+
+
 def test_unknown_contract():
     out = la.review_contract(la.LocalDocs(), "nope", FakeBedrock())
     assert "error" in out and len(out["available"]) == 2

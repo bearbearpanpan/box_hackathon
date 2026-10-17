@@ -222,12 +222,25 @@ def build_report(contract: Dict[str, str], claims: List[Dict[str, Any]], counts:
     return doc.render()
 
 
+def match_contract(contracts: List[Dict[str, str]], query: str) -> Optional[Dict[str, str]]:
+    words = [w for w in re.findall(r"[a-z0-9]+", query.lower()) if w not in ("pdf", "the", "contract")]
+    best, best_score = None, 0
+    for c in contracts:
+        name = re.sub(r"[^a-z0-9]", "", c["name"].lower())
+        hits = sum(1 for w in words if w in name)
+        if hits > best_score or (hits == best_score and best and len(c["name"]) < len(best["name"])):
+            best, best_score = c, hits
+    if best_score == 0 and len(contracts) == 1:
+        return contracts[0]
+    return best if best_score else None
+
+
 def review_contract(docs, contract_name: str, client=None) -> Dict[str, Any]:
-    matches = [c for c in docs.contracts() if contract_name.lower() in c["name"].lower()]
-    if not matches:
+    contracts = docs.contracts()
+    contract = match_contract(contracts, contract_name)
+    if not contract:
         return {"error": f"No contract matching '{contract_name}'.",
-                "available": [c["name"] for c in docs.contracts()]}
-    contract = min(matches, key=lambda c: len(c["name"]))
+                "available": [c["name"] for c in contracts]}
     contract_text = pdf_text(docs.read(contract["id"]))
     sources = []
     for i, e in enumerate(docs.evidence(), 1):
@@ -253,7 +266,7 @@ def review_contract(docs, contract_name: str, client=None) -> Dict[str, Any]:
 CHAT_SYSTEM = """You are Reality Check, a contract risk review assistant for sales and field teams.
 You check a proposed customer contract against approved product documentation, the product roadmap, and delivery reviews stored in Box.
 You never draft, rewrite, approve, or negotiate contracts.
-Use list_contracts to see contracts in Box and review_contract to review one.
+Use list_contracts to see contracts in Box and review_contract to review one. Pass the exact file name from list_contracts. If a review returns an error with "available" contracts, pick the closest match and retry instead of asking the user to upload.
 After a review, reply with: the claim counts, then each flagged claim ordered by severity (location, result, category, severity, evidence reference, one-line reason), then the Box link to the report. Keep it short."""
 
 CHAT_TOOLS = [
