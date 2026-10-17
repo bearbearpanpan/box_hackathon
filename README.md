@@ -95,6 +95,14 @@ round-trip a canary metric through live CloudWatch.
 2. **Meridian Systems** is the risky hardware vendor (appliance/PDU backorders).
 3. **Discounts >35%** correlate with services scope creep.
 
+## Chat with the agent
+
+```bash
+python3 chat.py
+```
+Needs Box + Bedrock configured (see [Going live](#going-live)). See
+[DEMO.md](./DEMO.md) for the live demo script.
+
 ## Run it offline (no keys)
 
 ```bash
