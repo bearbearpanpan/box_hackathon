@@ -8,8 +8,7 @@ Degrades gracefully: if a service isn't configured it says so and the demo can
 still run in offline/deterministic mode.
 
 Usage:
-    python3 agent/lambda/tools/check_config.py
-    (or)  python3 agent/lambda/handler.py check-config
+    python3 agent/check_config.py
 """
 from __future__ import annotations
 
@@ -69,7 +68,7 @@ def _check_bedrock(region: str, model_id: str) -> tuple[bool, str]:
 
 def _check_box() -> tuple[bool, str]:
     try:
-        box_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "box"))
+        box_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "box"))
         sys.path.insert(0, box_dir)
         from box_client import BoxClient
         c = BoxClient()
@@ -94,7 +93,7 @@ def run() -> dict:
             line(OK if ok else X, "Box API", detail)
         report["box"] = env["box_configured"]
     else:
-        line(WARN, "Box API", "not configured -> using local manifest.json (offline)")
+        line(WARN, "Box API", "not configured -> agent reads docs/box_upload (offline)")
 
     # --- Bedrock ---
     if env["aws_region"] and env["bedrock_model"]:
@@ -109,11 +108,11 @@ def run() -> dict:
             line(OK if ok else X, "AWS Bedrock", detail)
     else:
         line(WARN, "AWS Bedrock",
-             "AWS_REGION/BEDROCK_MODEL_ID not set -> using deterministic fallback (offline)")
+             "AWS_REGION/BEDROCK_MODEL_ID not set -> the agent needs Bedrock to review contracts")
 
     # overall mode
     has_live = any(c["status"] == OK for c in report["checks"])
-    report["mode"] = "live" if has_live else "offline (fully functional for demo)"
+    report["mode"] = "live" if has_live else "offline"
     return report
 
 
@@ -127,10 +126,6 @@ def main():
     print("  " + "-" * 46)
     print(f"  Mode: {rep['mode']}")
     print()
-    if rep["mode"].startswith("offline"):
-        print("  Note: the full demo (python3 demo.py) runs end-to-end in offline")
-        print("  mode. Live Box/Bedrock only enrich extraction + narrative text.")
-        print()
 
 
 if __name__ == "__main__":

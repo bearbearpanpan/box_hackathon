@@ -9,9 +9,8 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.insert(0, os.path.join(ROOT, "agent", "lambda", "tools"))
+sys.path.insert(0, os.path.join(ROOT, "agent"))
 sys.path.insert(0, os.path.join(ROOT, "box"))
-sys.path.insert(0, os.path.join(ROOT, "data"))
 
 import envload  # noqa: E402
 from minipdf import PdfDoc  # noqa: E402
@@ -43,7 +42,7 @@ class LocalDocs:
 
     def __init__(self) -> None:
         self.base = os.path.join(ROOT, "docs", "box_upload")
-        self.reports = os.path.join(ROOT, "data", "reports")
+        self.reports = os.path.join(ROOT, "reports")
 
     def _list(self, sub: str) -> List[Dict[str, str]]:
         folder = os.path.join(self.base, sub)
@@ -74,7 +73,7 @@ class BoxDocs:
     def __init__(self) -> None:
         from box_client import BoxClient
         self.client = BoxClient()
-        self.contracts_folder = os.environ["BOX_REVIEW_CONTRACTS_FOLDER_ID"]
+        self.contracts_folder = os.environ["BOX_CONTRACTS_FOLDER_ID"]
         self.evidence_folder = os.environ["BOX_EVIDENCE_FOLDER_ID"]
         self.reports_folder = os.environ["BOX_REPORTS_FOLDER_ID"]
 
@@ -99,7 +98,7 @@ class BoxDocs:
 def get_docs(offline: bool = False):
     has_auth = all(os.environ.get(k) for k in ("BOX_CLIENT_ID", "BOX_CLIENT_SECRET", "BOX_ENTERPRISE_ID"))
     has_folders = all(os.environ.get(k) for k in
-                      ("BOX_REVIEW_CONTRACTS_FOLDER_ID", "BOX_EVIDENCE_FOLDER_ID", "BOX_REPORTS_FOLDER_ID"))
+                      ("BOX_CONTRACTS_FOLDER_ID", "BOX_EVIDENCE_FOLDER_ID", "BOX_REPORTS_FOLDER_ID"))
     if not offline and has_auth and has_folders:
         return BoxDocs()
     return LocalDocs()
@@ -335,7 +334,7 @@ def main(argv: Optional[List[str]] = None) -> None:
         out = {"source": docs.kind}
         if docs.kind == "box":
             out["whoami"] = docs.client.whoami()
-            for key in ("BOX_REVIEW_CONTRACTS_FOLDER_ID", "BOX_EVIDENCE_FOLDER_ID", "BOX_REPORTS_FOLDER_ID"):
+            for key in ("BOX_CONTRACTS_FOLDER_ID", "BOX_EVIDENCE_FOLDER_ID", "BOX_REPORTS_FOLDER_ID"):
                 try:
                     out[key] = docs.client.folder_summary(os.environ[key])
                 except Exception as exc:

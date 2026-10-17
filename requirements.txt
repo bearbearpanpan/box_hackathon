@@ -1,0 +1,3 @@
+boto3>=1.39.0
+botocore>=1.39.0
+boxsdk>=10.0.0
