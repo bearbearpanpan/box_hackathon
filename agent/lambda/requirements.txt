@@ -1,13 +1,7 @@
 # Runtime dependencies for the Reality Check Lambda / tools.
 # NOTE: the PDF generation (minipdf) and comparison engine have NO dependencies.
 # These are only needed for live Box + Bedrock calls.
-#
-# IMPORTANT: Box renamed the PyPI package. The LEGACY SDK (the `from boxsdk
-# import Client, CCGAuth` API that box/box_client.py uses) is boxsdk 3.x.
-# Installing an unpinned `boxsdk` today pulls the new generated SDK (v10+,
-# import name `box_sdk_gen`) which has a different API and will NOT work with
-# the current code. Keep this pinned to the 3.x line.
 
 boto3>=1.39.0        # AWS Bedrock runtime (deep_research narrative, agent invoke); >=1.39 supports AWS_BEARER_TOKEN_BEDROCK auth
 botocore>=1.39.0     # pinned alongside boto3 for Bedrock bearer-token (API key) support
-boxsdk==3.14.0       # Box API (legacy SDK — matches box_client.py imports; NOT the v10+ generated SDK)
+boxsdk>=10.0.0       # Box API, imported as box_sdk_gen (list/download/upload, metadata, tasks, Box AI)

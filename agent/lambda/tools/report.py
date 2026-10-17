@@ -77,9 +77,8 @@ def createReviewTask(source, report_file_id: str, draft_id: str, risk_level: str
     # Live Box path: create a Box task on the file.
     if hasattr(source, "_connect"):
         try:
-            client = source._connect()
-            task = client.file(report_file_id).create_task(message=message, action="review")
-            return {"status": "created", "task_id": task.id, "assignee": assignee, "message": message}
+            task_id = source.create_review_task(report_file_id, message)
+            return {"status": "created", "task_id": task_id, "assignee": assignee, "message": message}
         except Exception as exc:
             return {"status": "error", "error": str(exc), "message": message}
 

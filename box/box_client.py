@@ -56,7 +56,7 @@ def _require(name: str) -> str:
 class BoxClient:
     """
     Wraps Box Server auth (Client Credentials Grant). The real network calls go
-    through the official `boxsdk`. If that package isn't installed yet (e.g. in
+    through the official `boxsdk` v10+ (`box_sdk_gen` module). If that package isn't installed yet (e.g. in
     the offline build sandbox), the client still constructs; it only fails when
     a method that needs the network is actually called.
     """
@@ -79,19 +79,28 @@ class BoxClient:
         if self._client is not None:
             return self._client
         try:
-            from boxsdk import Client, CCGAuth  # type: ignore
+            from box_sdk_gen import BoxClient as _SdkClient, BoxCCGAuth, CCGConfig  # type: ignore
         except Exception as exc:  # pragma: no cover - depends on install
             raise BoxConfigError(
-                "The 'boxsdk' package is required for live Box calls. "
-                "Install it with `pip install boxsdk` and set Box credentials."
+                "The 'boxsdk' package (v10+, imported as box_sdk_gen) is required for "
+                "live Box calls. Install it with `pip install 'boxsdk>=10'` and set Box credentials."
             ) from exc
 
-        auth = CCGAuth(
-            client_id=_require("BOX_CLIENT_ID"),
-            client_secret=_require("BOX_CLIENT_SECRET"),
-            enterprise_id=_require("BOX_ENTERPRISE_ID"),
+        client_id = _require("BOX_CLIENT_ID")
+        client_secret = _require("BOX_CLIENT_SECRET")
+        if client_id == client_secret:
+            raise BoxConfigError(
+                "BOX_CLIENT_SECRET is identical to BOX_CLIENT_ID. Copy the Client Secret "
+                "from Developer Console -> your app -> Configuration -> OAuth 2.0 Credentials."
+            )
+        auth = BoxCCGAuth(
+            CCGConfig(
+                client_id=client_id,
+                client_secret=client_secret,
+                enterprise_id=_require("BOX_ENTERPRISE_ID"),
+            )
         )
-        self._client = Client(auth)
+        self._client = _SdkClient(auth=auth)
         # Log the connection (never the secret) so a live vs. misconfigured
         # deployment is visible in CloudWatch.
         log_event(_log, "box.connect", use_box_ai=self.use_box_ai,
@@ -99,14 +108,19 @@ class BoxClient:
                   reports_folder=self.reports_folder)
         return self._client
 
+    def whoami(self) -> str:
+        """Login of the user the token acts as (the CCG service account)."""
+        me = self._connect().users.get_user_me()
+        return f"{me.name} <{me.login}>"
+
     # ---- file operations ----------------------------------------------------
     def list_contracts(self, folder_id: Optional[str] = None) -> List[BoxFile]:
         client = self._connect()
         fid = folder_id or self.contracts_folder
         with timed(_log, "box.list_contracts", folder_id=fid) as span:
-            items = client.folder(fid).get_items()
-            files = [BoxFile(id=i.id, name=i.name)
-                     for i in items if i.name.lower().endswith(".pdf")]
+            items = client.folders.get_folder_items(fid, limit=1000).entries or []
+            files = [BoxFile(id=i.id, name=i.name) for i in items
+                     if i.type == "file" and i.name.lower().endswith(".pdf")]
             span["count"] = len(files)
         return files
 
@@ -115,68 +129,89 @@ class BoxClient:
         Box AI; this returns raw bytes decoded best-effort for text docs.)"""
         client = self._connect()
         with timed(_log, "box.download_text", file_id=file_id) as span:
-            content = client.file(file_id).content()
+            content = client.downloads.download_file(file_id).read()
             span["bytes"] = len(content)
             try:
                 return content.decode("utf-8")
             except Exception:
                 # Non-UTF-8 content is expected for some docs; record that we
                 # fell back rather than failing, so it's not silent.
-                log_event(_log, "box.download_text.decode_fallback",
-                          file_id=file_id)
+                log_event(_log, "box.download_text.decode_fallback", file_id=file_id)
                 return content.decode("latin-1", "replace")
 
     def upload_pdf(self, name: str, data: bytes, folder_id: Optional[str] = None) -> str:
+        from box_sdk_gen import UploadFileAttributes, UploadFileAttributesParentField
         client = self._connect()
         fid = folder_id or self.reports_folder
         import io
         with timed(_log, "box.upload_pdf", folder_id=fid, name=name,
                    bytes=len(data)) as span:
-            uploaded = client.folder(fid).upload_stream(io.BytesIO(data), name)
-            span["file_id"] = uploaded.id
-        return uploaded.id
+            uploaded = client.uploads.upload_file(
+                UploadFileAttributes(name=name, parent=UploadFileAttributesParentField(id=fid)),
+                io.BytesIO(data),
+            )
+            file_id = uploaded.entries[0].id
+            span["file_id"] = file_id
+        return file_id
 
-    def write_metadata(self, file_id: str, data: dict, template: str = "realityCheck") -> None:
+    def write_metadata(self, file_id: str, data: dict, template: str = "properties") -> None:
+        """Write free-form key/values to the file's global/properties metadata
+        (works on every Box plan; no enterprise template needed)."""
+        from box_sdk_gen import (
+            BoxAPIError,
+            CreateFileMetadataByIdScope,
+            UpdateFileMetadataByIdScope,
+            UpdateFileMetadataByIdRequestBody,
+            UpdateFileMetadataByIdRequestBodyOpField,
+        )
         client = self._connect()
-        f = client.file(file_id)
+        data = {k: ("" if v is None else v if isinstance(v, (str, int, float)) else str(v))
+                for k, v in data.items()}
         try:
-            f.metadata("enterprise", template).create(data)
+            client.file_metadata.create_file_metadata_by_id(
+                file_id, CreateFileMetadataByIdScope.GLOBAL, template, data)
             log_event(_log, "box.write_metadata", file_id=file_id,
                       template=template, mode="create")
-        except Exception as exc:
-            # already exists -> update. Log the create failure at DEBUG (it's the
-            # expected path for existing metadata) so it's observable, not silent.
-            log_event(_log, "box.write_metadata.create_failed_updating",
-                      level=logging.DEBUG, file_id=file_id, template=template,
-                      error=str(exc))
-            ops = [{"op": "replace", "path": f"/{k}", "value": v} for k, v in data.items()]
-            f.metadata("enterprise", template).update(ops)
+        except BoxAPIError as exc:
+            if exc.response_info.status_code != 409:
+                raise
+            # already exists -> update. Log at DEBUG (the expected path for
+            # existing metadata) so it's observable, not silent.
+            log_event(_log, "box.write_metadata.exists_updating",
+                      level=logging.DEBUG, file_id=file_id, template=template)
+            ops = [UpdateFileMetadataByIdRequestBody(
+                       op=UpdateFileMetadataByIdRequestBodyOpField.ADD, path=f"/{k}", value=v)
+                   for k, v in data.items()]
+            client.file_metadata.update_file_metadata_by_id(
+                file_id, UpdateFileMetadataByIdScope.GLOBAL, template, ops)
+
+    def create_review_task(self, file_id: str, message: str) -> str:
+        from box_sdk_gen import CreateTaskItem, CreateTaskItemTypeField, CreateTaskAction
+        task = self._connect().tasks.create_task(
+            CreateTaskItem(id=file_id, type=CreateTaskItemTypeField.FILE),
+            action=CreateTaskAction.REVIEW,
+            message=message,
+        )
+        return task.id
 
     # ---- Box AI -------------------------------------------------------------
     def _box_ai_request(self, mode: str, prompt: str, file_ids: List[str]) -> str:
         """
         Single seam for Box AI. `mode` is 'ask' or 'extract'. Returns raw text.
-        Uses the Box AI endpoint via the SDK's generic API session so this keeps
-        working across SDK minor versions.
         """
+        from box_sdk_gen import AiItemAsk, CreateAiAskMode
         client = self._connect()
-        items = [{"id": fid, "type": "file"} for fid in file_ids]
-        ai_mode = "single_item_qa" if len(file_ids) == 1 else "multiple_item_qa"
-        body = {
-            "mode": ai_mode,
-            "prompt": prompt,
-            "items": items,
-        }
-        url = "https://api.box.com/2.0/ai/ask"
+        items = [AiItemAsk(id=fid) for fid in file_ids]
+        ask_mode = (CreateAiAskMode.SINGLE_ITEM_QA if len(file_ids) == 1
+                    else CreateAiAskMode.MULTIPLE_ITEM_QA)
         # Box AI is the slowest external hop (one call per contract). Time every
         # call and emit a latency metric so p99 and throttling are visible.
-        with timed(_log, "box.ai_ask", mode=ai_mode, request_mode=mode,
+        with timed(_log, "box.ai_ask", request_mode=mode,
                    file_count=len(file_ids)) as span:
-            resp = client.make_request("POST", url, data=json.dumps(body))
-            payload = resp.json()
-            answer = payload.get("answer", "")
+            resp = client.ai.create_ai_ask(ask_mode, prompt, items)
+            answer = resp.answer if resp else ""
             span["answer_len"] = len(answer)
-            emit_metric("BoxAiCall", 1, "Count", mode=ai_mode)
+            emit_metric("BoxAiCall", 1, "Count", mode=str(ask_mode))
         return answer
 
     def ai_ask(self, file_id: str, prompt: str) -> str:
