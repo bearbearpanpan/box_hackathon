@@ -21,3 +21,6 @@ build/
 .DS_Store
 .idea/
 .vscode/
+
+# Generated reports (regenerated at runtime)
+data/reports/
