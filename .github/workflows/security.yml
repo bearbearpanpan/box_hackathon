@@ -1,0 +1,98 @@
+name: Security
+
+# Bundles the non-CodeQL security gates:
+#   - Bandit        : Python SAST (flags eval, weak crypto, injection, etc.)
+#   - pip-audit     : known-vulnerability scan of declared dependencies
+#   - Gitleaks      : secret scanning across the working tree and history
+#   - dependency-review (PR only): blocks PRs that introduce vulnerable/licensed deps
+#
+# SARIF output is uploaded so findings appear in Security > Code scanning.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "27 3 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  bandit:
+    name: Bandit (Python SAST)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Bandit
+        run: pip install "bandit[sarif]"
+
+      - name: Run Bandit
+        # Do not fail the build on findings; surface them as SARIF alerts instead.
+        # Skips the generated PDF fixtures and virtualenv.
+        run: |
+          bandit -r . \
+            -x ./.venv,./data/contracts,./data/reports,./data/reviews \
+            -f sarif -o bandit.sarif || true
+
+      - name: Upload Bandit SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: bandit.sarif
+          category: bandit
+
+  pip-audit:
+    name: pip-audit (dependency vulnerabilities)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Audit declared dependencies
+        # Audit the Lambda runtime requirements. Non-zero exit on a known CVE
+        # fails the job so dependency risk is visible on every push/PR.
+        # (No --strict: with ">=" ranges and no lockfile, --strict fails on
+        #  resolution/metadata gaps rather than real vulnerabilities.)
+        run: pip-audit -r agent/lambda/requirements.txt
+
+  gitleaks:
+    name: Gitleaks (secret scanning)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so leaked-then-removed secrets are caught
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: on-failure

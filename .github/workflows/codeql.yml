@@ -1,0 +1,49 @@
+name: CodeQL
+
+# Static analysis (SAST) for the Python codebase. Results surface in the
+# repository's Security > Code scanning alerts tab.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly re-scan so newly published queries catch existing code.
+    - cron: "27 3 * * 1"
+
+permissions:
+  contents: read
+  security-events: write   # required to upload CodeQL results
+  actions: read
+
+jobs:
+  analyze:
+    name: Analyze (python)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          # security-extended adds higher-signal security queries on top of the
+          # default pack (e.g. injection, path traversal, unsafe deserialization).
+          queries: security-extended
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:python"

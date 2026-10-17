@@ -1,0 +1,50 @@
+name: SBOM
+
+# Generates a CycloneDX Software Bill of Materials and verifies the committed
+# sbom.json is up to date. The committed sbom.json is kept current on every
+# check-in by the local pre-commit hook (scripts/install-hooks.sh); this job is
+# the server-side guard that fails the build if someone bypasses the hook, and
+# publishes the SBOM as a downloadable artifact.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sbom:
+    name: Generate & verify CycloneDX SBOM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate SBOM
+        run: python3 scripts/generate_sbom.py
+
+      - name: Verify committed SBOM is current
+        # Ignore the metadata timestamp line (it is intentionally stable only
+        # when components are unchanged). If component data drifted, fail and
+        # tell the contributor to regenerate.
+        run: |
+          if ! git diff --quiet -- sbom.json; then
+            echo "::error::sbom.json is out of date. Run 'python3 scripts/generate_sbom.py' and commit the result."
+            git diff -- sbom.json
+            exit 1
+          fi
+          echo "Committed SBOM is current."
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-cyclonedx
+          path: sbom.json
+          if-no-files-found: error
