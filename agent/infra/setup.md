@@ -40,8 +40,14 @@ aws lambda create-function \
   --timeout 60 --memory-size 512 \
   --role arn:aws:iam::<ACCOUNT_ID>:role/<lambda-exec-role> \
   --zip-file fileb://reality-check-tools.zip \
-  --environment "Variables={BOX_CLIENT_ID=...,BOX_CLIENT_SECRET=...,BOX_ENTERPRISE_ID=...,USE_BOX_AI=true,BEDROCK_MODEL_ID=anthropic.claude-3-5-sonnet-20240620-v1:0,AWS_REGION=us-east-1}"
+  --environment "Variables={BOX_CLIENT_ID=...,BOX_CLIENT_SECRET=...,BOX_ENTERPRISE_ID=...,USE_BOX_AI=true,BEDROCK_MODEL_ID=anthropic.claude-3-5-sonnet-20240620-v1:0,AWS_REGION=us-east-1,LOG_LEVEL=INFO,EMIT_METRICS=true}"
 ```
+
+**Observability env vars** (handled by `box/telemetry.py`):
+- `LOG_LEVEL` — `INFO` (default), `DEBUG`, or `WARNING`. Structured JSON logs go
+  to stderr → CloudWatch Logs.
+- `EMIT_METRICS` — set `true` to emit EMF metrics (namespace `RealityCheck`) that
+  the dashboard in step 7 reads. Off by default so the local CLI stays clean.
 
 ## 4. Create the Bedrock agent
 1. Bedrock console -> Agents -> Create agent `reality-check`.
@@ -62,3 +68,19 @@ Upload a draft contract to the Box folder, then ask the agent:
 > "Run a reality check on the new draft."
 ~30s later it returns the RED headline with citations and drops a review task on
 the deal desk.
+
+## 7. Observability dashboard (CDK)
+Deploy the CloudWatch dashboard + baseline alarms that visualize the Lambda's
+health, Box AI / Bedrock usage, and the agentic-workflow KPIs:
+
+```bash
+cd agent/infra/cdk
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+npm install                 # pinned CDK CLI
+./node_modules/.bin/cdk bootstrap        # first time per account+region
+./node_modules/.bin/cdk deploy -c functionName=reality-check-tools
+```
+The dashboard's custom-metric widgets populate once the Lambda runs with
+`EMIT_METRICS=true` (step 3). See `agent/infra/cdk/README.md` for details and
+the optional `alarmEmail` notification wiring.

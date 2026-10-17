@@ -59,15 +59,32 @@ def _score_features(draft: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 def _bedrock_brief(draft: Dict[str, Any], recs: List[Dict[str, Any]], comparables: List[Dict[str, Any]]) -> str:
     """Optional: ask a Bedrock model to write a short brief. No-op if unset."""
+    import logging
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "box")))
+    from telemetry import get_logger, log_event, timed, emit_metric
+    _log = get_logger("reality_check.bedrock")
+
     model_id = os.environ.get("BEDROCK_MODEL_ID")
     if not model_id or not os.environ.get("AWS_REGION"):
+        log_event(_log, "bedrock.skipped", reason="not_configured")
         return ("[Bedrock not configured] Enable AWS_REGION + BEDROCK_MODEL_ID to "
                 "generate a narrative research brief. Deterministic recommendations "
                 "above are still fully usable.")
     try:
         import json
         import boto3  # type: ignore
-        client = boto3.client("bedrock-runtime", region_name=os.environ["AWS_REGION"])
+        from botocore.config import Config  # type: ignore
+        # Give the Bedrock client resilient defaults (adaptive retries +
+        # bounded timeouts) and a tagged User-Agent for cost attribution.
+        bedrock_cfg = Config(
+            retries={"max_attempts": 3, "mode": "adaptive"},
+            connect_timeout=5,
+            read_timeout=30,
+            user_agent_extra="reality-check/observability",
+        )
+        client = boto3.client("bedrock-runtime",
+                              region_name=os.environ["AWS_REGION"],
+                              config=bedrock_cfg)
         top = recs[:5]
         prompt = (
             "You are a solutions consultant. Given this draft tech-sales deal and "
@@ -82,10 +99,26 @@ def _bedrock_brief(draft: Dict[str, Any], recs: List[Dict[str, Any]], comparable
             "max_tokens": 400,
             "messages": [{"role": "user", "content": prompt}],
         }
-        resp = client.invoke_model(modelId=model_id, body=json.dumps(body))
-        payload = json.loads(resp["body"].read())
-        return payload["content"][0]["text"]
+        with timed(_log, "bedrock.invoke_model", model_id=model_id,
+                   max_tokens=body["max_tokens"]) as span:
+            resp = client.invoke_model(modelId=model_id, body=json.dumps(body))
+            payload = json.loads(resp["body"].read())
+            # Capture token usage for cost/latency visibility when present.
+            usage = payload.get("usage", {}) or {}
+            span["input_tokens"] = usage.get("input_tokens")
+            span["output_tokens"] = usage.get("output_tokens")
+            emit_metric("BedrockInvoke", 1, "Count", model_id=model_id)
+            if usage.get("input_tokens") is not None:
+                emit_metric("BedrockInputTokens", usage["input_tokens"], "Count")
+            if usage.get("output_tokens") is not None:
+                emit_metric("BedrockOutputTokens", usage["output_tokens"], "Count")
+            return payload["content"][0]["text"]
     except Exception as exc:  # pragma: no cover
+        # Degrade to deterministic output (unchanged behavior) but make the
+        # failure observable instead of only inlining it into the PDF text.
+        log_event(_log, "bedrock.invoke_failed", level=logging.ERROR,
+                  model_id=model_id, error=str(exc), error_type=type(exc).__name__)
+        emit_metric("BedrockInvokeFailure", 1, "Count")
         return f"[Bedrock call failed: {exc}] Using deterministic recommendations only."
 
 

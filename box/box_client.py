@@ -25,8 +25,13 @@ from __future__ import annotations
 
 import os
 import json
+import logging
 from dataclasses import dataclass
 from typing import List, Optional
+
+from telemetry import get_logger, log_event, timed, emit_metric
+
+_log = get_logger("reality_check.box")
 
 
 @dataclass
@@ -87,30 +92,48 @@ class BoxClient:
             enterprise_id=_require("BOX_ENTERPRISE_ID"),
         )
         self._client = Client(auth)
+        # Log the connection (never the secret) so a live vs. misconfigured
+        # deployment is visible in CloudWatch.
+        log_event(_log, "box.connect", use_box_ai=self.use_box_ai,
+                  contracts_folder=self.contracts_folder,
+                  reports_folder=self.reports_folder)
         return self._client
 
     # ---- file operations ----------------------------------------------------
     def list_contracts(self, folder_id: Optional[str] = None) -> List[BoxFile]:
         client = self._connect()
         fid = folder_id or self.contracts_folder
-        items = client.folder(fid).get_items()
-        return [BoxFile(id=i.id, name=i.name) for i in items if i.name.lower().endswith(".pdf")]
+        with timed(_log, "box.list_contracts", folder_id=fid) as span:
+            items = client.folder(fid).get_items()
+            files = [BoxFile(id=i.id, name=i.name)
+                     for i in items if i.name.lower().endswith(".pdf")]
+            span["count"] = len(files)
+        return files
 
     def download_text(self, file_id: str) -> str:
         """Download a file's bytes. (PDF text parsing is done by the caller /
         Box AI; this returns raw bytes decoded best-effort for text docs.)"""
         client = self._connect()
-        content = client.file(file_id).content()
-        try:
-            return content.decode("utf-8")
-        except Exception:
-            return content.decode("latin-1", "replace")
+        with timed(_log, "box.download_text", file_id=file_id) as span:
+            content = client.file(file_id).content()
+            span["bytes"] = len(content)
+            try:
+                return content.decode("utf-8")
+            except Exception:
+                # Non-UTF-8 content is expected for some docs; record that we
+                # fell back rather than failing, so it's not silent.
+                log_event(_log, "box.download_text.decode_fallback",
+                          file_id=file_id)
+                return content.decode("latin-1", "replace")
 
     def upload_pdf(self, name: str, data: bytes, folder_id: Optional[str] = None) -> str:
         client = self._connect()
         fid = folder_id or self.reports_folder
         import io
-        uploaded = client.folder(fid).upload_stream(io.BytesIO(data), name)
+        with timed(_log, "box.upload_pdf", folder_id=fid, name=name,
+                   bytes=len(data)) as span:
+            uploaded = client.folder(fid).upload_stream(io.BytesIO(data), name)
+            span["file_id"] = uploaded.id
         return uploaded.id
 
     def write_metadata(self, file_id: str, data: dict, template: str = "realityCheck") -> None:
@@ -118,8 +141,14 @@ class BoxClient:
         f = client.file(file_id)
         try:
             f.metadata("enterprise", template).create(data)
-        except Exception:
-            # already exists -> update
+            log_event(_log, "box.write_metadata", file_id=file_id,
+                      template=template, mode="create")
+        except Exception as exc:
+            # already exists -> update. Log the create failure at DEBUG (it's the
+            # expected path for existing metadata) so it's observable, not silent.
+            log_event(_log, "box.write_metadata.create_failed_updating",
+                      level=logging.DEBUG, file_id=file_id, template=template,
+                      error=str(exc))
             ops = [{"op": "replace", "path": f"/{k}", "value": v} for k, v in data.items()]
             f.metadata("enterprise", template).update(ops)
 
@@ -132,15 +161,23 @@ class BoxClient:
         """
         client = self._connect()
         items = [{"id": fid, "type": "file"} for fid in file_ids]
+        ai_mode = "single_item_qa" if len(file_ids) == 1 else "multiple_item_qa"
         body = {
-            "mode": "single_item_qa" if len(file_ids) == 1 else "multiple_item_qa",
+            "mode": ai_mode,
             "prompt": prompt,
             "items": items,
         }
         url = "https://api.box.com/2.0/ai/ask"
-        resp = client.make_request("POST", url, data=json.dumps(body))
-        payload = resp.json()
-        return payload.get("answer", "")
+        # Box AI is the slowest external hop (one call per contract). Time every
+        # call and emit a latency metric so p99 and throttling are visible.
+        with timed(_log, "box.ai_ask", mode=ai_mode, request_mode=mode,
+                   file_count=len(file_ids)) as span:
+            resp = client.make_request("POST", url, data=json.dumps(body))
+            payload = resp.json()
+            answer = payload.get("answer", "")
+            span["answer_len"] = len(answer)
+            emit_metric("BoxAiCall", 1, "Count", mode=ai_mode)
+        return answer
 
     def ai_ask(self, file_id: str, prompt: str) -> str:
         if not self.use_box_ai:
@@ -165,6 +202,15 @@ class BoxClient:
         try:
             start = raw.find("{")
             end = raw.rfind("}")
-            return json.loads(raw[start : end + 1])
-        except Exception:
+            md = json.loads(raw[start : end + 1])
+            log_event(_log, "box.extract_metadata", file_id=file_id,
+                      field_count=len(md))
+            return md
+        except Exception as exc:
+            # Degrading to {} is intentional (callers handle it), but it was
+            # previously silent — a run full of empty metadata would look fine.
+            # Log a warning and count it so extraction failures are visible.
+            log_event(_log, "box.extract_metadata.parse_failed",
+                      level=logging.WARNING, file_id=file_id, error=str(exc))
+            emit_metric("BoxExtractParseFailure", 1, "Count")
             return {}

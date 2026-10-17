@@ -31,14 +31,36 @@ import raise_risks as risk_tool              # noqa: E402
 import deep_research as research_tool        # noqa: E402
 import report as report_tool                 # noqa: E402
 
+from telemetry import (                       # noqa: E402
+    get_logger, log_event, timed, emit_metric, new_request_id,
+)
+
+_log = get_logger("reality_check.handler")
+
 
 def _history():
-    """Load deal history from Box (live) or local manifest (offline)."""
+    """Load deal history from Box (live) or local manifest (offline).
+
+    Live Box extraction is one Box AI call per contract, which is slow for a
+    whole folder. If box/prime_cache.py has written data/contracts/box_cache.json,
+    use that instead of re-extracting on every run. Delete the cache (or run
+    prime_cache.py --force) to refresh it.
+    """
     from local_source import get_source
     src = get_source()
     if hasattr(src, "all_records"):   # LocalSource
         return src, src.all_records()
-    # Live Box: pull metadata for all contracts in the folder.
+
+    # Live Box: prefer the extraction cache if present.
+    cache_path = os.path.abspath(
+        os.path.join(HERE, "..", "..", "data", "contracts", "box_cache.json")
+    )
+    if os.path.exists(cache_path):
+        with open(cache_path) as fh:
+            cache = json.load(fh)
+        return src, list(cache.values())
+
+    # No cache: pull metadata for all contracts in the folder (slow).
     records = []
     for f in src.list_contracts():
         md = src.extract_metadata(f.id)
@@ -48,6 +70,17 @@ def _history():
 
 
 def run_action(action: str, params: Dict[str, Any]) -> Dict[str, Any]:
+    # Observability wrapper: log every dispatch with a correlation id, redacted
+    # params, and outcome/duration. The real dispatch is _dispatch_action below;
+    # this preserves the exact return value and raising behavior.
+    req_id = new_request_id()
+    with timed(_log, "action", action=action, request_id=req_id,
+               param_keys=sorted((params or {}).keys())):
+        emit_metric("ActionInvoked", 1, "Count", action=action)
+        return _dispatch_action(action, params)
+
+
+def _dispatch_action(action: str, params: Dict[str, Any]) -> Dict[str, Any]:
     if action == "draft-contract":
         return draft_tool.draft_contract(params)
 
@@ -186,13 +219,21 @@ def analyze_and_report(params: Dict[str, Any]) -> Dict[str, Any]:
 
 # ---- Bedrock agent event shape -------------------------------------------
 def lambda_handler(event: Dict[str, Any], context=None) -> Dict[str, Any]:
+    aws_request_id = getattr(context, "aws_request_id", None)
+
     # Direct/local invocation: {"action": "...", "params": {...}}
     if "action" in event:
+        log_event(_log, "invoke", source="direct", action=event.get("action"),
+                  aws_request_id=aws_request_id)
         result = run_action(event["action"], event.get("params", {}))
         return {"result": result}
 
     # Bedrock agent invocation
     api_path = (event.get("apiPath") or event.get("function") or "").lstrip("/")
+    log_event(_log, "invoke", source="bedrock", action=api_path,
+              action_group=event.get("actionGroup"),
+              http_method=event.get("httpMethod"),
+              aws_request_id=aws_request_id)
     params = _bedrock_params(event)
     result = run_action(api_path, params)
 

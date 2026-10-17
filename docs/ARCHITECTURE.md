@@ -19,6 +19,8 @@ the whole pipeline is demoable without any cloud dependency.
 | **Tools** | `agent/lambda/tools/*` | Core: `draft_contract`, `raise_risks`, `deep_research`, `comparison`, `report`, `revise`, `workflow`, `approvals`, `notes_parser`. "Wow" features in `tools/features/`. |
 | **Box integration** | `box/box_client.py` | Box API + Box AI wrapper (CCG auth). |
 | **Offline source** | `box/local_source.py` | Duck-typed stand-in reading `data/contracts/manifest.json`. `get_source()` picks Box iff credentials are set. |
+| **Telemetry** | `box/telemetry.py` | Dependency-free structured logging, latency timing, and EMF metrics across the three trust boundaries + workflow KPIs. Opt-in via `LOG_LEVEL` / `EMIT_METRICS`. |
+| **Infra (CDK)** | `agent/infra/cdk/` | Python CDK app: CloudWatch observability dashboard + baseline alarms over the `RealityCheck` metric namespace. |
 | **Data model + fixtures** | `data/` | `catalog.py` (reference data + `RISK_LIBRARY`), `risk_signals.py`, `minipdf.py` (dependency-free PDF writer), 100 synthetic contract PDFs. |
 | **Demo** | `demo.py` | Narrated end-to-end walkthrough. |
 
@@ -67,10 +69,14 @@ request_changes) and re-enters the loop until it clears.
 ## Tech stack
 
 - **Python 3** throughout; standard library only for the core engine
-  (`minipdf.py` is deliberately dependency-free).
+  (`minipdf.py` and `box/telemetry.py` are deliberately dependency-free).
 - **Runtime deps** (`agent/lambda/requirements.txt`): `boto3` (Bedrock) and
   `boxsdk` (Box) — only needed for live calls.
+- **Infra deps** (`agent/infra/cdk/`): `aws-cdk-lib` + the CDK CLI — build-time
+  only, for the observability stack; not part of the Lambda runtime.
 - **Foundation model**: `anthropic.claude-3-5-sonnet-20240620-v1:0`.
+- **Observability**: opt-in structured logging + EMF metrics via `LOG_LEVEL` /
+  `EMIT_METRICS`; CloudWatch dashboard + alarms deployed from the CDK app.
 
 See [SECURITY.md](./SECURITY.md) for the threat model and
 [DOC_AUDIT.md](./DOC_AUDIT.md) for the documentation review.
