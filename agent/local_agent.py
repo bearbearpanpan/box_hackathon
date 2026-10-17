@@ -46,7 +46,7 @@ class LocalDocs:
 
     def _list(self, sub: str) -> List[Dict[str, str]]:
         folder = os.path.join(self.base, sub)
-        return [{"id": os.path.join(folder, n), "name": n, "link": os.path.join(folder, n)}
+        return [{"id": os.path.join(folder, n), "name": n, "link": os.path.relpath(os.path.join(folder, n), ROOT)}
                 for n in sorted(os.listdir(folder)) if n.endswith(".pdf")]
 
     def contracts(self) -> List[Dict[str, str]]:
@@ -64,7 +64,14 @@ class LocalDocs:
         path = os.path.join(self.reports, name)
         with open(path, "wb") as fh:
             fh.write(data)
-        return {"id": path, "link": path}
+        return {"id": path, "link": os.path.relpath(path, ROOT)}
+
+    def comment(self, file_id: str, message: str) -> str:
+        os.makedirs(self.reports, exist_ok=True)
+        path = os.path.join(self.reports, os.path.basename(file_id).rsplit(".", 1)[0] + ".comments.txt")
+        with open(path, "a") as fh:
+            fh.write(message + "\n\n")
+        return path
 
 
 class BoxDocs:
@@ -94,6 +101,9 @@ class BoxDocs:
         file_id = self.client.upload_pdf(name, data, folder_id=self.reports_folder)
         return {"id": file_id, "link": f"https://app.box.com/file/{file_id}"}
 
+    def comment(self, file_id: str, message: str) -> str:
+        return self.client.add_comment(file_id, message)
+
 
 def get_docs(offline: bool = False):
     has_auth = all(os.environ.get(k) for k in ("BOX_CLIENT_ID", "BOX_CLIENT_SECRET", "BOX_ENTERPRISE_ID"))
@@ -109,16 +119,18 @@ def bedrock():
     return boto3.client("bedrock-runtime", region_name=REGION)
 
 
-REVIEW_SYSTEM = """You review a proposed sales contract before it is shared or signed. You never draft or rewrite contracts.
+REVIEW_SYSTEM = """You review a draft sales contract before the sales team commits to the customer. You never draft or rewrite contracts.
 
-1. Extract every customer-facing claim about feature availability, delivery deadlines, or performance. Keep the exact wording and contract location (for example "Section 3"). Split statements that contain several commitments. Ignore commercials, signatures, and anything outside those three categories.
-2. For each claim, look for relevant evidence in the provided Box documents (B1, B2, ...).
-3. Compare the claim with the evidence, including Region, configuration, date, workload, and other conditions. A roadmap Target or Exploratory item does not support a promised feature or date. A benchmark supports only claims within its tested conditions. Burst figures do not support sustained claims.
-4. Result rules:
-   - No relevant source in the documents: result "No source found". State what evidence was sought.
-   - Source matches the claim including its conditions: result "No risk".
-   - Source contradicts or does not support the claim: result "Risk identified" with exactly one risk_category.
-Use only the provided documents. Quote the supporting passage or data point."""
+1. Extract every customer-facing claim about feature availability, delivery deadlines, or performance, in contract order. Keep the exact wording and the contract location (for example "Section 3"). Split statements that contain several commitments. Ignore commercials, signatures, and anything outside those three categories.
+2. For each claim, search all provided Box documents (B1, B2, ...) for evidence about that specific capability, date, or metric.
+3. Decide the result:
+   - "Risk identified", category "Feature availability": a source says the capability is unsupported, not approved, Exploratory, Target, or otherwise not available for the promised configuration or launch.
+   - "Risk identified", category "Delivery deadline": the promised date or duration is shorter than comparable delivery outcomes, or depends on a release without a Committed date.
+   - "Risk identified", category "Performance commitment": the promised metric exceeds the validated benchmark, relies on burst figures, or falls outside the tested conditions.
+   - "No source found": no document mentions the capability, date, or metric at all. Use this only when nothing relevant exists; never when a source contradicts the claim.
+   - "No risk": a source explicitly supports the claim including its Region, configuration, date, and workload.
+4. Write for a busy sales rep. explanation: one plain sentence, at most 25 words, stating the claim versus the evidence with the key number or status. evidence_passage: the shortest quote that proves it.
+Use only the provided documents."""
 
 REVIEW_TOOL = {
     "toolSpec": {
@@ -132,13 +144,13 @@ REVIEW_TOOL = {
                     "items": {
                         "type": "object",
                         "properties": {
-                            "location": {"type": "string"},
-                            "claim": {"type": "string"},
+                            "location": {"type": "string", "description": "Contract location, e.g. Section 3"},
+                            "claim": {"type": "string", "description": "Exact claim wording"},
                             "result": {"type": "string", "enum": RESULTS},
                             "risk_category": {"type": "string", "enum": CATEGORIES + ["None"]},
                             "evidence_ref": {"type": "string", "description": "B1, B2, ... or empty when no source"},
-                            "evidence_passage": {"type": "string"},
-                            "explanation": {"type": "string"},
+                            "evidence_passage": {"type": "string", "description": "Shortest supporting quote"},
+                            "explanation": {"type": "string", "description": "One sentence, max 25 words"},
                         },
                         "required": ["location", "claim", "result", "risk_category",
                                      "evidence_ref", "evidence_passage", "explanation"],
@@ -154,13 +166,13 @@ REVIEW_TOOL = {
 def llm_review(client, contract_name: str, contract_text: str, sources: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     blocks = [f"CONTRACT: {contract_name}\n{contract_text}"]
     for s in sources:
-        blocks.append(f"SOURCE {s['ref']}: {s['name']} (last updated {s['last_updated']})\n{s['text']}")
+        blocks.append(f"SOURCE {s['ref']}: {s['title']} (last updated {s['last_updated']})\n{s['text']}")
     resp = client.converse(
         modelId=MODEL_ID,
         system=[{"text": REVIEW_SYSTEM}],
         messages=[{"role": "user", "content": [{"text": "\n\n---\n\n".join(blocks)}]}],
         toolConfig={"tools": [REVIEW_TOOL], "toolChoice": {"tool": {"name": "submit_review"}}},
-        inferenceConfig={"maxTokens": 4000},
+        inferenceConfig={"maxTokens": 4000, "temperature": 0},
     )
     for block in resp["output"]["message"]["content"]:
         if "toolUse" in block:
@@ -168,7 +180,7 @@ def llm_review(client, contract_name: str, contract_text: str, sources: List[Dic
     raise RuntimeError("Model did not return a review.")
 
 
-def score(claims: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def classify(claims: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     out = []
     for c in claims:
         c = dict(c)
@@ -179,7 +191,15 @@ def score(claims: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         else:
             c["severity"] = CATEGORY_SEVERITY.get(c["risk_category"], "High")
         out.append(c)
-    return sorted(out, key=lambda c: (SEVERITY_ORDER[c["severity"]], c["result"] == "No risk"))
+    return out
+
+
+def by_severity(claims: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    return sorted(claims, key=lambda c: (SEVERITY_ORDER[c["severity"]], c["result"] == "No risk"))
+
+
+def score(claims: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    return by_severity(classify(claims))
 
 
 def summarize(claims: List[Dict[str, Any]]) -> Dict[str, int]:
@@ -188,37 +208,86 @@ def summarize(claims: List[Dict[str, Any]]) -> Dict[str, int]:
     return counts
 
 
+NAVY = (0.11, 0.20, 0.36)
+RED = (0.75, 0.15, 0.15)
+AMBER = (0.80, 0.45, 0.0)
+GREEN = (0.10, 0.50, 0.25)
+GREY = (0.40, 0.40, 0.40)
+SEVERITY_COLOR = {"High": RED, "Medium": AMBER, "None": GREEN}
+
+
+def label(c: Dict[str, Any]) -> str:
+    if c["result"] == "Risk identified":
+        return f"{c['risk_category']} risk"
+    return c["result"]
+
+
 def build_report(contract: Dict[str, str], claims: List[Dict[str, Any]], counts: Dict[str, int],
                  sources: List[Dict[str, Any]]) -> bytes:
-    doc = PdfDoc()
-    doc.add_heading(f"Contract Risk Review: {contract['name'].rsplit('.', 1)[0]}")
-    doc.add_paragraph(f"Generated {datetime.now().strftime('%B %d, %Y %H:%M')} by Reality Check. "
-                      "This report supports human judgment; it does not approve the contract for signature.")
-    doc.add_rule()
-    doc.add_subheading(f"{len(claims)} claims reviewed")
-    doc.add_paragraph(f"{counts['No risk']} No risk | {counts['Risk identified']} Risk identified | "
-                      f"{counts['No source found']} No source found")
-    doc.add_paragraph(f"Severity: {counts['severity_High']} High | {counts['severity_Medium']} Medium | "
-                      f"{counts['severity_None']} None")
-    doc.add_rule()
     refs = {s["ref"]: s for s in sources}
-    for i, c in enumerate(claims, 1):
-        doc.add_subheading(f"{i}. {c['location']}: {c['result']} | Severity {c['severity']}")
-        doc.add_paragraph(f"Claim: \"{c['claim']}\"")
-        if c["risk_category"] != "None":
-            doc.add_keyvalue("Risk category", c["risk_category"])
+    flagged = [c for c in claims if c["result"] != "No risk"]
+    supported = [c for c in claims if c["result"] == "No risk"]
+    doc = PdfDoc(margin=44)
+    doc.add_band("REALITY CHECK  ·  Contract Risk Review", NAVY, size=10, gap_before=0)
+    doc.add_heading(contract["name"].rsplit(".", 1)[0].replace("-", " "), size=18)
+    doc.add_text(f"Reviewed {datetime.now().strftime('%B %d, %Y')} against {len(sources)} Box sources  ·  "
+                 "Draft review before customer commitment", size=9, color=GREY, gap_before=2)
+    if flagged:
+        doc.add_band(f"{len(flagged)} of {len(claims)} claims need attention before you commit", RED, size=13)
+    else:
+        doc.add_band(f"All {len(claims)} claims are supported by evidence", GREEN, size=13)
+    doc.add_text(f"{counts['No risk']} No risk   ·   {counts['Risk identified']} Risk identified   ·   "
+                 f"{counts['No source found']} No source found", size=10, bold=True, gap_before=8)
+    doc.add_text(f"Severity:  {counts['severity_High']} High   ·   {counts['severity_Medium']} Medium   ·   "
+                 f"{counts['severity_None']} None", size=9, color=GREY, gap_before=2)
+
+    def claim_block(c: Dict[str, Any]) -> None:
+        color = SEVERITY_COLOR[c["severity"]]
+        tag = "OK" if c["severity"] == "None" else c["severity"].upper()
+        doc.add_text(f"[{tag}]  {label(c)}  ·  {c['location']}", size=11, bold=True, color=color, gap_before=6)
+        doc.add_text(f"\"{c['claim']}\"", size=9, color=GREY, indent=14, gap_before=3)
+        doc.add_text(c["explanation"], size=10, indent=14, gap_before=3)
         src = refs.get(c.get("evidence_ref", ""))
         if src:
-            doc.add_keyvalue("Evidence", f"[{src['ref']}] {src['name']} (updated {src['last_updated']})")
-        if c.get("evidence_passage"):
-            doc.add_paragraph(f"Passage: {c['evidence_passage']}")
-        doc.add_paragraph(f"Why: {c['explanation']}")
-        doc.add_spacer(4)
+            doc.add_text(f"Source: {src['ref']}  {src['title']}  ·  updated {src['last_updated']}",
+                         size=8, color=GREY, indent=14, gap_before=2)
+
+    if flagged:
+        doc.add_rule()
+        doc.add_text("NEEDS ATTENTION", size=9, bold=True, color=GREY, gap_before=4)
+        for c in flagged:
+            claim_block(c)
+    if supported:
+        doc.add_rule()
+        doc.add_text("SUPPORTED BY EVIDENCE", size=9, bold=True, color=GREY, gap_before=4)
+        for c in supported:
+            claim_block(c)
     doc.add_rule()
-    doc.add_subheading("Source references")
+    doc.add_text("SOURCES IN BOX", size=9, bold=True, color=GREY, gap_before=4)
     for s in sources:
-        doc.add_paragraph(f"{s['ref']}: {s['name']} | last updated {s['last_updated']} | {s['link']}")
+        doc.add_text(f"{s['ref']}  {s['title']}  ·  updated {s['last_updated']}  ·  "
+                     f"{s['link'].replace('https://', '')}", size=8, gap_before=4)
+    doc.add_spacer(4)
+    doc.add_text("No source found means the claim could not be verified in Box; it does not prove the claim is false. "
+                 "This review supports human judgment and does not approve the contract for signature.",
+                 size=8, color=GREY)
     return doc.render()
+
+
+COMMENT_ICON = {"High": "\U0001F534", "Medium": "\U0001F7E0", "None": "✅"}
+
+
+def format_comment(c: Dict[str, Any], sources: List[Dict[str, Any]], report_link: str) -> str:
+    refs = {s["ref"]: s for s in sources}
+    head = f"{COMMENT_ICON[c['severity']]} Reality Check · {c['location']}: {label(c)}"
+    if c["severity"] != "None":
+        head += f" ({c['severity']})"
+    lines = [head, f"\"{c['claim']}\"", c["explanation"]]
+    src = refs.get(c.get("evidence_ref", ""))
+    if src:
+        lines.append(f"Source: {src['ref']} {src['title']} (updated {src['last_updated']}) {src['link']}")
+    lines.append(f"Full report: {report_link}")
+    return "\n".join(lines)
 
 
 def match_contract(contracts: List[Dict[str, str]], query: str) -> Optional[Dict[str, str]]:
@@ -244,21 +313,28 @@ def review_contract(docs, contract_name: str, client=None) -> Dict[str, Any]:
     sources = []
     for i, e in enumerate(docs.evidence(), 1):
         text = pdf_text(docs.read(e["id"]))
-        sources.append({**e, "ref": f"B{i}", "text": text, "last_updated": last_updated(text)})
-    claims = score(llm_review(client or bedrock(), contract["name"], contract_text, sources))
+        title = text.strip().splitlines()[0] if text.strip() else e["name"]
+        sources.append({**e, "ref": f"B{i}", "text": text, "title": title, "last_updated": last_updated(text)})
+    in_order = classify(llm_review(client or bedrock(), contract["name"], contract_text, sources))
+    claims = by_severity(in_order)
     counts = summarize(claims)
     pdf = build_report(contract, claims, counts, sources)
     name = f"Risk Review - {contract['name'].rsplit('.', 1)[0]}.pdf"
     report = docs.upload_report(name, pdf)
+    comments = 0
+    for c in in_order:
+        docs.comment(contract["id"], format_comment(c, sources, report["link"]))
+        comments += 1
     return {
         "contract": contract["name"],
         "contract_link": contract["link"],
         "summary": counts,
         "claims": [{k: c[k] for k in ("location", "claim", "result", "risk_category", "severity",
                                       "evidence_ref", "explanation")} for c in claims],
-        "sources": [{k: s[k] for k in ("ref", "name", "last_updated", "link")} for s in sources],
+        "sources": [{k: s[k] for k in ("ref", "title", "last_updated", "link")} for s in sources],
         "report_name": name,
         "report_link": report["link"],
+        "comments_posted_on_contract": comments,
     }
 
 
@@ -266,7 +342,7 @@ CHAT_SYSTEM = """You are Reality Check, a contract risk review assistant for sal
 You check a proposed customer contract against approved product documentation, the product roadmap, and delivery reviews stored in Box.
 You never draft, rewrite, approve, or negotiate contracts.
 Use list_contracts to see contracts in Box and review_contract to review one. Pass the exact file name from list_contracts. If a review returns an error with "available" contracts, pick the closest match and retry instead of asking the user to upload.
-After a review, reply with: the claim counts, then each flagged claim ordered by severity (location, result, category, severity, evidence reference, one-line reason), then the Box link to the report. Keep it short."""
+After a review, reply with: the claim counts, then each flagged claim ordered by severity (location, result, category, severity, evidence reference, one-line reason), then the Box link to the report, and note that a comment was added to the contract in Box for every claim. Keep it short."""
 
 CHAT_TOOLS = [
     {"toolSpec": {"name": "list_contracts", "description": "List contracts available for review in Box.",

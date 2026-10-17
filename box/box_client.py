@@ -9,6 +9,7 @@ Operations:
   * folder_summary(folder_id)        -> dict
   * download_bytes(file_id)          -> bytes
   * upload_pdf(name, data, folder)   -> file_id       (new version on name conflict)
+  * add_comment(file_id, message)    -> comment_id
 """
 from __future__ import annotations
 
@@ -137,3 +138,9 @@ class BoxClient:
             uploaded = client.uploads.upload_file_version(
                 conflict["id"], UploadFileVersionAttributes(name=name), io.BytesIO(data))
         return uploaded.entries[0].id
+
+    def add_comment(self, file_id: str, message: str) -> str:
+        from box_sdk_gen import CreateCommentItem, CreateCommentItemTypeField
+        comment = self._connect().comments.create_comment(
+            message, CreateCommentItem(id=file_id, type=CreateCommentItemTypeField.FILE))
+        return comment.id
