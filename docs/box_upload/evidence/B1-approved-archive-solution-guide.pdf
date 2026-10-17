@@ -1,0 +1,151 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [6 0 R 8 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Length 2867 >>
+stream
+BT
+/F2 16.0 Tf
+1 0 0 1 60.0 722.0 Tm
+(Approved Archive Solution Guide) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 696.0 Tm
+(Document ID: B1 | Owner: Archive Storage Product Team \(Priya Raman\) | Last updated: October 1,) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 682.0 Tm
+(2026 | Status: Approved for customer use) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 662.0 Tm
+(Fictional demo data. Not actual AWS product documentation or commitments.) Tj
+/F2 12.0 Tf
+1 0 0 1 60.0 622.0 Tm
+(Purpose) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 600.0 Tm
+(This guide lists what the field team may promise today for the Archive Storage service.) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 586.0 Tm
+(Anything not listed here must be confirmed with the product owner before it appears in a) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 572.0 Tm
+(customer agreement.) Tj
+/F2 12.0 Tf
+1 0 0 1 60.0 532.0 Tm
+(Supported capabilities) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 510.0 Tm
+(- Encryption at rest: supported for Standard and Archive tiers in all commercial Regions,) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 496.0 Tm
+(including US-West \(Oregon\), using service-managed or customer-managed keys.) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 476.0 Tm
+(- Encryption in transit: TLS 1.2 or higher on all endpoints.) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 456.0 Tm
+(- Object versioning and object lock \(compliance mode\): supported for Standard and Archive) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 442.0 Tm
+(tiers.) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 422.0 Tm
+(- Bulk import from exported files: supported through the Archive Transfer Tool for CSV) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 408.0 Tm
+(manifests and ZIP batches up to 5 TB per batch.) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 388.0 Tm
+(- Lifecycle rules to move objects from Standard to Archive tier after a configurable number of) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 374.0 Tm
+(days.) Tj
+/F2 12.0 Tf
+1 0 0 1 60.0 334.0 Tm
+(Not supported or not approved) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 312.0 Tm
+(- Smart Archive Search is not a supported capability. See the Archive Product Roadmap \(B2\).) Tj
+/F2 12.0 Tf
+1 0 0 1 60.0 272.0 Tm
+(Performance benchmark) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 250.0 Tm
+(Validated configuration: Archive tier, US-West \(Oregon\), 500-800 TB archive, objects 1-50 MB,) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 236.0 Tm
+(64 parallel readers.) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 216.0 Tm
+(- Sustained read throughput: 5 GB/s \(validated September 2026\).) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 196.0 Tm
+(- Peak burst read throughput: 7 GB/s for up to 10 minutes. Burst figures must not be promised) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 182.0 Tm
+(as sustained.) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 162.0 Tm
+(- First-byte retrieval latency for Archive tier: 3-5 hours \(standard retrieval\), 1-5 minutes) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 148.0 Tm
+(\(expedited\).) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 128.0 Tm
+(- Throughput above 5 GB/s sustained has not been benchmarked and requires a performance) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 114.0 Tm
+(engineering review.) Tj
+ET
+
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 5 0 R >>
+endobj
+7 0 obj
+<< /Length 204 >>
+stream
+BT
+/F2 12.0 Tf
+1 0 0 1 60.0 732.0 Tm
+(Limits) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 710.0 Tm
+(- Maximum object size: 5 TB.) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 690.0 Tm
+(- Maximum Archive Transfer Tool batch: 5 TB.) Tj
+ET
+
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 7 0 R >>
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000127 00000 n 
+0000000197 00000 n 
+0000000272 00000 n 
+0000003191 00000 n 
+0000003327 00000 n 
+0000003582 00000 n 
+trailer
+<< /Size 9 /Root 1 0 R >>
+startxref
+3718
+%%EOF

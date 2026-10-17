@@ -1,0 +1,108 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [6 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Length 2152 >>
+stream
+BT
+/F2 16.0 Tf
+1 0 0 1 60.0 722.0 Tm
+(Archive Migration Delivery Review) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 696.0 Tm
+(Document ID: B3 | Owner: Migration Delivery Office \(Maria Chen\) | Last updated: September 30,) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 682.0 Tm
+(2026 | Status: Approved closeout summary) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 662.0 Tm
+(Fictional demo data. Not actual AWS customer projects.) Tj
+/F2 12.0 Tf
+1 0 0 1 60.0 622.0 Tm
+(Scope) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 600.0 Tm
+(Closeout results for completed archive migrations of 400-800 TB into the Archive tier over the) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 586.0 Tm
+(last 12 months.) Tj
+/F2 12.0 Tf
+1 0 0 1 60.0 546.0 Tm
+(Delivery outcomes) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 524.0 Tm
+(- MIG-2025-114, Contoso Records, 520 TB: promised 45 days, actual 61 days. Slip cause:) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 510.0 Tm
+(customer-side export throughput.) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 490.0 Tm
+(- MIG-2026-019, Fabrikam Health, 610 TB: promised 40 days, actual 72 days. Slip cause: data) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 476.0 Tm
+(validation and re-export of corrupt batches.) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 456.0 Tm
+(- MIG-2026-042, Tailspin Media, 480 TB: promised 50 days, actual 58 days. Slip cause:) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 442.0 Tm
+(change-freeze window at customer.) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 422.0 Tm
+(- MIG-2026-077, Wingtip Legal, 700 TB: promised 45 days, actual 69 days. Slip cause: Archive) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 408.0 Tm
+(Transfer Tool batch limits and re-queuing.) Tj
+/F2 12.0 Tf
+1 0 0 1 60.0 368.0 Tm
+(Summary) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 346.0 Tm
+(- Comparable migrations took 58-72 days \(median 65 days\).) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 326.0 Tm
+(- No archive migration above 400 TB has completed in under 58 days.) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 306.0 Tm
+(- Most common causes: customer-side export speed, batch re-processing, and change freezes.) Tj
+/F2 12.0 Tf
+1 0 0 1 60.0 266.0 Tm
+(Recommendation) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 244.0 Tm
+(For archives of 400-800 TB, commit to no less than 75 days from signature, or stage the) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 230.0 Tm
+(migration with a first milestone at 30 days.) Tj
+ET
+
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 5 0 R >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000121 00000 n 
+0000000191 00000 n 
+0000000266 00000 n 
+0000002470 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+2606
+%%EOF
