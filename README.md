@@ -101,8 +101,8 @@ Copy `.env.example` to `.env`, fill in Box + AWS values, then follow
 
 **P0: must have**
 
-1. **Pin the Box SDK.** `requirements.txt` has `boxsdk>=3.9.0`; v10 drops the
-   legacy `from boxsdk import Client, CCGAuth`. Pin `boxsdk<10` and verify the import.
+1. ~~**Box SDK v10.**~~ Done: `box/box_client.py` now uses the v10 API (`box_sdk_gen`).
+   Run `python3 agent/lambda/tools/check_config.py` to verify auth.
 2. **Set up Box.** Create `Reality Check/Deal History` and `Reality Check/Reports`
    in your Box, invite the `AutomationUser_…` service account as Editor, upload
    the 100 contract PDFs, set `BOX_CONTRACTS_FOLDER_ID` / `BOX_REPORTS_FOLDER_ID`
