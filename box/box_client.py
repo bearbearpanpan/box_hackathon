@@ -132,9 +132,6 @@ class BoxClient:
                 raise
             return conflicts[0]["id"]
 
-    def parent_id(self, folder_id: str) -> str:
-        return self._connect().folders.get_folder_by_id(folder_id).parent.id
-
     def download_text(self, file_id: str) -> str:
         """Download a file's bytes. (PDF text parsing is done by the caller /
         Box AI; this returns raw bytes decoded best-effort for text docs.)"""

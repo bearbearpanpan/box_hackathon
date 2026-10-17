@@ -41,13 +41,13 @@ def upload_dir(box: BoxClient, sub: str, folder_id: str, only: list | None = Non
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Create Evidence + Contracts for Review folders in Box and upload the demo docs.")
+    ap = argparse.ArgumentParser(description="Create Evidence + Contracts for Review folders inside the contracts folder in Box and upload the demo docs.")
     ap.add_argument("--with-v2", action="store_true", help="also upload the revised v2 contract")
     args = ap.parse_args()
 
     box = BoxClient()
     print(f"Box user: {box.whoami()}")
-    parent = box.parent_id(os.environ["BOX_CONTRACTS_FOLDER_ID"])
+    parent = os.environ["BOX_CONTRACTS_FOLDER_ID"]
     evidence = box.ensure_folder("Evidence", parent)
     contracts = box.ensure_folder("Contracts for Review", parent)
     set_env("BOX_EVIDENCE_FOLDER_ID", evidence)
