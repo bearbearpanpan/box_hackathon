@@ -31,6 +31,7 @@ def _check_env() -> dict:
     bedrock_model = os.environ.get("BEDROCK_MODEL_ID")
     aws_creds = bool(
         os.environ.get("AWS_ACCESS_KEY_ID")
+        or os.environ.get("AWS_BEARER_TOKEN_BEDROCK")
         or os.path.exists(os.path.expanduser("~/.aws/credentials"))
     )
     return {
@@ -99,7 +100,9 @@ def run() -> dict:
         if not _check_boto3():
             line(X, "AWS Bedrock", "boto3 not installed -> run: pip install boto3")
         elif not env["aws_creds_present"]:
-            line(X, "AWS Bedrock", "no AWS credentials found -> run: aws configure")
+            line(X, "AWS Bedrock",
+                 "no AWS credentials found -> set AWS_BEARER_TOKEN_BEDROCK, "
+                 "export AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY, or run: aws configure")
         else:
             ok, detail = _check_bedrock(env["aws_region"], env["bedrock_model"])
             line(OK if ok else X, "AWS Bedrock", detail)
