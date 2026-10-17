@@ -4,7 +4,7 @@
 << /Type /Catalog /Pages 2 0 R >>
 endobj
 2 0 obj
-<< /Type /Pages /Kids [6 0 R 8 0 R] /Count 2 >>
+<< /Type /Pages /Kids [6 0 R] /Count 1 >>
 endobj
 3 0 obj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
@@ -13,7 +13,7 @@ endobj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
 endobj
 5 0 obj
-<< /Length 2811 >>
+<< /Length 2739 >>
 stream
 BT
 /F2 16.0 Tf
@@ -33,97 +33,94 @@ BT
 (Provider: CloudSuite, Inc.) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 624.0 Tm
-(Customer: VanArsdel Devices  \(Consumer Electronics\)) Tj
+(Customer: Graphic Design Inst  \(Education\)) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 608.0 Tm
-(Deployment region: US-Central \(Dallas, TX\)) Tj
+(Deployment region: EU-Central \(Frankfurt, DE\)) Tj
 /F2 12.0 Tf
 1 0 0 1 60.0 586.0 Tm
 (2. Commercial Terms) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 568.0 Tm
-(Signed: 2024-02-12  \(Q1\)) Tj
+(Signed: 2025-11-12  \(Q4\)) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 552.0 Tm
-(Term: 36 months) Tj
+(Term: 24 months) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 536.0 Tm
-(Payment terms: Annual prepay) Tj
+(Payment terms: Net 30) Tj
 /F2 12.0 Tf
 1 0 0 1 60.0 514.0 Tm
 (3. Order Line Items) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 492.0 Tm
-(- DataForge Lakehouse  [SKU-PLAT-DATA]  400 x $180 \(per TB / mo\) = $72,000) Tj
+(- SentryShield Security \(SaaS\)  [SKU-SAAS-SEC]  50 x $2,100 \(per seat / yr\) = $105,000) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 472.0 Tm
-(- InsightIQ Analytics \(SaaS\)  [SKU-SAAS-ANLX]  150 x $1,800 \(per seat / yr\) = $270,000) Tj
+(- InsightIQ Analytics \(SaaS\)  [SKU-SAAS-ANLX]  100 x $1,800 \(per seat / yr\) = $180,000) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 452.0 Tm
-(- EdgeNode Appliance \(on-prem\)  [SKU-HW-APPL]  3 x $42,000 \(per unit\) = $126,000) Tj
+1 0 0 1 60.0 456.0 Tm
+(Subtotal: $285,000) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 436.0 Tm
-(Subtotal: $468,000) Tj
+1 0 0 1 60.0 440.0 Tm
+(Discount: 30%  \(-$85,500\)) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 420.0 Tm
-(Discount: 30%  \(-$140,400\)) Tj
-/F1 10.0 Tf
-1 0 0 1 60.0 404.0 Tm
-(Total Contract Value \(TCV\): $327,600) Tj
+1 0 0 1 60.0 424.0 Tm
+(Total Contract Value \(TCV\): $199,500) Tj
 /F2 12.0 Tf
-1 0 0 1 60.0 382.0 Tm
-(4. Hardware & Supply) Tj
-/F1 10.0 Tf
-1 0 0 1 60.0 364.0 Tm
-(Hardware vendor: Apex Compute) Tj
-/F1 10.0 Tf
-1 0 0 1 60.0 344.0 Tm
-(On-prem hardware is subject to vendor lead times. Freight and customs may affect delivery,) Tj
-/F1 10.0 Tf
-1 0 0 1 60.0 330.0 Tm
-(particularly for Q4 ship windows.) Tj
-/F2 12.0 Tf
-1 0 0 1 60.0 308.0 Tm
+1 0 0 1 60.0 402.0 Tm
 (5. Service Levels \(SLA\)) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 290.0 Tm
+1 0 0 1 60.0 384.0 Tm
 (SLA tier: Standard) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 274.0 Tm
+1 0 0 1 60.0 368.0 Tm
 (Uptime commitment: 99.5%) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 258.0 Tm
+1 0 0 1 60.0 352.0 Tm
 (Support response: Next business day) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 242.0 Tm
+1 0 0 1 60.0 336.0 Tm
 (Service credits: 5% monthly credit per 0.5% miss) Tj
 /F2 12.0 Tf
-1 0 0 1 60.0 220.0 Tm
+1 0 0 1 60.0 314.0 Tm
 (6. Delivery & Implementation) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 202.0 Tm
-(Promised delivery: 79 days from signature) Tj
+1 0 0 1 60.0 296.0 Tm
+(Promised delivery: 21 days from signature) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 186.0 Tm
-(Promised date: 2024-05-01) Tj
+1 0 0 1 60.0 280.0 Tm
+(Promised date: 2025-12-03) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 166.0 Tm
+1 0 0 1 60.0 260.0 Tm
 (Compliance pack included: Yes) Tj
 /F2 12.0 Tf
-1 0 0 1 60.0 144.0 Tm
+1 0 0 1 60.0 238.0 Tm
 (7. Delivery Outcome \(internal closeout record\)) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 122.0 Tm
+1 0 0 1 60.0 216.0 Tm
 (This section is an internal post-delivery record for history/analysis and is not part of the) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 108.0 Tm
+1 0 0 1 60.0 202.0 Tm
 (customer-facing agreement.) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 92.0 Tm
-(Actual delivery: 82 days from signature) Tj
+1 0 0 1 60.0 186.0 Tm
+(Actual delivery: 20 days from signature) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 76.0 Tm
-(Actual date: 2024-05-04) Tj
+1 0 0 1 60.0 170.0 Tm
+(Actual date: 2025-12-02) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 154.0 Tm
+(Slip vs promise: -1 days) Tj
+/F1 8.0 Tf
+1 0 0 1 60.0 112.0 Tm
+(--------------------------------------------------------------------------------) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 94.0 Tm
+(This document is synthetic sample data generated for a hackathon demo. Customer names are) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 80.0 Tm
+(fictional. Not a real agreement.) Tj
 ET
 
 endstream
@@ -131,42 +128,17 @@ endobj
 6 0 obj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 5 0 R >>
 endobj
-7 0 obj
-<< /Length 390 >>
-stream
-BT
-/F1 10.0 Tf
-1 0 0 1 60.0 732.0 Tm
-(Slip vs promise: +3 days) Tj
-/F1 8.0 Tf
-1 0 0 1 60.0 690.0 Tm
-(--------------------------------------------------------------------------------) Tj
-/F1 10.0 Tf
-1 0 0 1 60.0 672.0 Tm
-(This document is synthetic sample data generated for a hackathon demo. Customer names are) Tj
-/F1 10.0 Tf
-1 0 0 1 60.0 658.0 Tm
-(fictional. Not a real agreement.) Tj
-ET
-
-endstream
-endobj
-8 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 7 0 R >>
-endobj
 xref
-0 9
+0 7
 0000000000 65535 f 
 0000000015 00000 n 
 0000000064 00000 n 
-0000000127 00000 n 
-0000000197 00000 n 
-0000000272 00000 n 
-0000003135 00000 n 
-0000003271 00000 n 
-0000003712 00000 n 
+0000000121 00000 n 
+0000000191 00000 n 
+0000000266 00000 n 
+0000003057 00000 n 
 trailer
-<< /Size 9 /Root 1 0 R >>
+<< /Size 7 /Root 1 0 R >>
 startxref
-3848
+3193
 %%EOF

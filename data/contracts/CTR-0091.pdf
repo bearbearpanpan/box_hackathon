@@ -13,7 +13,7 @@ endobj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
 endobj
 5 0 obj
-<< /Length 2805 >>
+<< /Length 2791 >>
 stream
 BT
 /F2 16.0 Tf
@@ -33,94 +33,94 @@ BT
 (Provider: CloudSuite, Inc.) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 624.0 Tm
-(Customer: VanArsdel Devices  \(Consumer Electronics\)) Tj
+(Customer: Fabrikam Media  \(Media & Streaming\)) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 608.0 Tm
-(Deployment region: EU-West \(Dublin, IE\)) Tj
+(Deployment region: APAC \(Singapore\)) Tj
 /F2 12.0 Tf
 1 0 0 1 60.0 586.0 Tm
 (2. Commercial Terms) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 568.0 Tm
-(Signed: 2024-11-26  \(Q4\)) Tj
+(Signed: 2023-11-24  \(Q4\)) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 552.0 Tm
-(Term: 24 months) Tj
+(Term: 12 months) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 536.0 Tm
-(Payment terms: Net 30) Tj
+(Payment terms: Annual prepay) Tj
 /F2 12.0 Tf
 1 0 0 1 60.0 514.0 Tm
 (3. Order Line Items) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 492.0 Tm
-(- SentryShield Security \(SaaS\)  [SKU-SAAS-SEC]  1000 x $2,100 \(per seat / yr\) = $2,100,000) Tj
+(- SentryShield Security \(SaaS\)  [SKU-SAAS-SEC]  50 x $2,100 \(per seat / yr\) = $105,000) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 472.0 Tm
-(- CloudSuite Core Platform \(SaaS\)  [SKU-SAAS-CORE]  600 x $1,200 \(per seat / yr\) = $720,000) Tj
+(- CloudSuite Core Platform \(SaaS\)  [SKU-SAAS-CORE]  150 x $1,200 \(per seat / yr\) = $180,000) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 452.0 Tm
-(- EdgeNode Appliance \(on-prem\)  [SKU-HW-APPL]  3 x $42,000 \(per unit\) = $126,000) Tj
+(- Technical Account Management  [SKU-SVC-TAM]  1 x $60,000 \(per yr\) = $60,000) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 432.0 Tm
-(- Data Migration Services  [SKU-SVC-MIGR]  1 x $120,000 \(fixed\) = $120,000) Tj
+1 0 0 1 60.0 436.0 Tm
+(Subtotal: $345,000) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 416.0 Tm
-(Subtotal: $3,066,000) Tj
+1 0 0 1 60.0 420.0 Tm
+(Discount: 25%  \(-$86,250\)) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 400.0 Tm
-(Discount: 25%  \(-$766,500\)) Tj
-/F1 10.0 Tf
-1 0 0 1 60.0 384.0 Tm
-(Total Contract Value \(TCV\): $2,299,500) Tj
+1 0 0 1 60.0 404.0 Tm
+(Total Contract Value \(TCV\): $258,750) Tj
 /F2 12.0 Tf
-1 0 0 1 60.0 362.0 Tm
-(4. Hardware & Supply) Tj
-/F1 10.0 Tf
-1 0 0 1 60.0 344.0 Tm
-(Hardware vendor: Cascade Devices) Tj
-/F1 10.0 Tf
-1 0 0 1 60.0 324.0 Tm
-(On-prem hardware is subject to vendor lead times. Freight and customs may affect delivery,) Tj
-/F1 10.0 Tf
-1 0 0 1 60.0 310.0 Tm
-(particularly for Q4 ship windows.) Tj
-/F2 12.0 Tf
-1 0 0 1 60.0 288.0 Tm
+1 0 0 1 60.0 382.0 Tm
 (5. Service Levels \(SLA\)) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 270.0 Tm
+1 0 0 1 60.0 364.0 Tm
 (SLA tier: Business) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 254.0 Tm
+1 0 0 1 60.0 348.0 Tm
 (Uptime commitment: 99.9%) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 238.0 Tm
+1 0 0 1 60.0 332.0 Tm
 (Support response: 4 business hours) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 222.0 Tm
+1 0 0 1 60.0 316.0 Tm
 (Service credits: 10% monthly credit per 0.1% miss) Tj
 /F2 12.0 Tf
-1 0 0 1 60.0 200.0 Tm
+1 0 0 1 60.0 294.0 Tm
 (6. Delivery & Implementation) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 182.0 Tm
-(Promised delivery: 90 days from signature) Tj
+1 0 0 1 60.0 276.0 Tm
+(Promised delivery: 25 days from signature) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 166.0 Tm
-(Promised date: 2025-02-24) Tj
+1 0 0 1 60.0 260.0 Tm
+(Promised date: 2023-12-19) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 146.0 Tm
-(Compliance pack included: No) Tj
+1 0 0 1 60.0 240.0 Tm
+(Compliance pack included: Yes) Tj
 /F2 12.0 Tf
-1 0 0 1 60.0 124.0 Tm
+1 0 0 1 60.0 218.0 Tm
 (7. Delivery Outcome \(internal closeout record\)) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 102.0 Tm
+1 0 0 1 60.0 196.0 Tm
 (This section is an internal post-delivery record for history/analysis and is not part of the) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 88.0 Tm
+1 0 0 1 60.0 182.0 Tm
 (customer-facing agreement.) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 166.0 Tm
+(Actual delivery: 29 days from signature) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 150.0 Tm
+(Actual date: 2023-12-23) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 134.0 Tm
+(Slip vs promise: +4 days) Tj
+/F1 8.0 Tf
+1 0 0 1 60.0 92.0 Tm
+(--------------------------------------------------------------------------------) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 74.0 Tm
+(This document is synthetic sample data generated for a hackathon demo. Customer names are) Tj
 ET
 
 endstream
@@ -129,26 +129,11 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 5 0 R >>
 endobj
 7 0 obj
-<< /Length 534 >>
+<< /Length 78 >>
 stream
 BT
 /F1 10.0 Tf
 1 0 0 1 60.0 732.0 Tm
-(Actual delivery: 129 days from signature) Tj
-/F1 10.0 Tf
-1 0 0 1 60.0 716.0 Tm
-(Actual date: 2025-04-04) Tj
-/F1 10.0 Tf
-1 0 0 1 60.0 700.0 Tm
-(Slip vs promise: +39 days) Tj
-/F1 8.0 Tf
-1 0 0 1 60.0 658.0 Tm
-(--------------------------------------------------------------------------------) Tj
-/F1 10.0 Tf
-1 0 0 1 60.0 640.0 Tm
-(This document is synthetic sample data generated for a hackathon demo. Customer names are) Tj
-/F1 10.0 Tf
-1 0 0 1 60.0 626.0 Tm
 (fictional. Not a real agreement.) Tj
 ET
 
@@ -165,11 +150,11 @@ xref
 0000000127 00000 n 
 0000000197 00000 n 
 0000000272 00000 n 
-0000003129 00000 n 
-0000003265 00000 n 
-0000003850 00000 n 
+0000003115 00000 n 
+0000003251 00000 n 
+0000003379 00000 n 
 trailer
 << /Size 9 /Root 1 0 R >>
 startxref
-3986
+3515
 %%EOF

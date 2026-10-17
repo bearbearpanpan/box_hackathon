@@ -101,7 +101,47 @@ def run_action(action: str, params: Dict[str, Any]) -> Dict[str, Any]:
             auto_upload=params.get("auto_upload", True),
         )
 
+    # ---- "wow" features ---------------------------------------------------
+    if action in ("grade-deal", "redline", "obligations", "simulate",
+                  "path-to-grade", "portfolio-radar"):
+        return run_feature(action, params)
+
     raise ValueError(f"Unknown action: {action}")
+
+
+def run_feature(action: str, params: Dict[str, Any]) -> Dict[str, Any]:
+    import os as _os
+    sys.path.insert(0, _os.path.join(HERE, "tools", "features"))
+    src, history = _history()
+    draft = params.get("draft") or _resolve_draft(src, params)
+
+    if action == "grade-deal":
+        from features import grade
+        return grade.grade_with_benchmark(draft, history)
+
+    if action == "redline":
+        import raise_risks as risk_tool
+        from features import redline
+        rr = risk_tool.raise_risks(draft, history)
+        return redline.propose_redlines(draft, rr, history)
+
+    if action == "obligations":
+        from features import obligations
+        return obligations.build_register(draft)
+
+    if action == "simulate":
+        from features import simulate
+        return simulate.simulate(draft, params.get("overrides", {}), history)
+
+    if action == "path-to-grade":
+        from features import simulate
+        return simulate.find_path_to_grade(draft, params.get("target", "B"), history)
+
+    if action == "portfolio-radar":
+        from features import portfolio
+        return portfolio.scan(history)
+
+    raise ValueError(f"Unknown feature: {action}")
 
 
 def _resolve_draft(src, params: Dict[str, Any]) -> Dict[str, Any]:

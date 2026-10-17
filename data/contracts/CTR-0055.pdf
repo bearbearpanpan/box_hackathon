@@ -13,7 +13,7 @@ endobj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
 endobj
 5 0 obj
-<< /Length 2805 >>
+<< /Length 2690 >>
 stream
 BT
 /F2 16.0 Tf
@@ -33,94 +33,94 @@ BT
 (Provider: CloudSuite, Inc.) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 624.0 Tm
-(Customer: Margie's Travel  \(Travel / Hospitality\)) Tj
+(Customer: Contoso Manufacturing  \(Industrial / IoT\)) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 608.0 Tm
-(Deployment region: US-Central \(Dallas, TX\)) Tj
+(Deployment region: EU-Central \(Frankfurt, DE\)) Tj
 /F2 12.0 Tf
 1 0 0 1 60.0 586.0 Tm
 (2. Commercial Terms) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 568.0 Tm
-(Signed: 2024-08-01  \(Q3\)) Tj
+(Signed: 2024-11-02  \(Q4\)) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 552.0 Tm
-(Term: 36 months) Tj
+(Term: 24 months) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 536.0 Tm
-(Payment terms: Annual prepay) Tj
+(Payment terms: Net 45) Tj
 /F2 12.0 Tf
 1 0 0 1 60.0 514.0 Tm
 (3. Order Line Items) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 492.0 Tm
-(- SentryShield Security \(SaaS\)  [SKU-SAAS-SEC]  250 x $2,100 \(per seat / yr\) = $525,000) Tj
+(- InsightIQ Analytics \(SaaS\)  [SKU-SAAS-ANLX]  400 x $1,800 \(per seat / yr\) = $720,000) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 472.0 Tm
-(- InsightIQ Analytics \(SaaS\)  [SKU-SAAS-ANLX]  1000 x $1,800 \(per seat / yr\) = $1,800,000) Tj
+(- VaultArray Storage Node  [SKU-HW-STOR]  8 x $68,000 \(per node\) = $544,000) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 452.0 Tm
-(- Technical Account Management  [SKU-SVC-TAM]  1 x $60,000 \(per yr\) = $60,000) Tj
+1 0 0 1 60.0 456.0 Tm
+(Subtotal: $1,264,000) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 436.0 Tm
-(Subtotal: $2,385,000) Tj
-/F1 10.0 Tf
-1 0 0 1 60.0 420.0 Tm
-(Discount: 20%  \(-$477,000\)) Tj
-/F1 10.0 Tf
-1 0 0 1 60.0 404.0 Tm
-(Total Contract Value \(TCV\): $1,908,000) Tj
+1 0 0 1 60.0 440.0 Tm
+(Total Contract Value \(TCV\): $1,264,000) Tj
 /F2 12.0 Tf
-1 0 0 1 60.0 382.0 Tm
+1 0 0 1 60.0 418.0 Tm
+(4. Hardware & Supply) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 400.0 Tm
+(Hardware vendor: Vortex Hardware) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 380.0 Tm
+(On-prem hardware is subject to vendor lead times. Freight and customs may affect delivery,) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 366.0 Tm
+(particularly for Q4 ship windows.) Tj
+/F2 12.0 Tf
+1 0 0 1 60.0 344.0 Tm
 (5. Service Levels \(SLA\)) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 364.0 Tm
+1 0 0 1 60.0 326.0 Tm
 (SLA tier: Enterprise) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 348.0 Tm
+1 0 0 1 60.0 310.0 Tm
 (Uptime commitment: 99.95%) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 332.0 Tm
+1 0 0 1 60.0 294.0 Tm
 (Support response: 1 hour, 24x7) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 316.0 Tm
+1 0 0 1 60.0 278.0 Tm
 (Service credits: 15% monthly credit per 0.05% miss) Tj
 /F2 12.0 Tf
-1 0 0 1 60.0 294.0 Tm
+1 0 0 1 60.0 256.0 Tm
 (6. Delivery & Implementation) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 276.0 Tm
-(Promised delivery: 38 days from signature) Tj
+1 0 0 1 60.0 238.0 Tm
+(Promised delivery: 80 days from signature) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 260.0 Tm
-(Promised date: 2024-09-08) Tj
+1 0 0 1 60.0 222.0 Tm
+(Promised date: 2025-01-21) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 240.0 Tm
-(Compliance pack included: No) Tj
+1 0 0 1 60.0 202.0 Tm
+(Compliance pack included: Yes) Tj
 /F2 12.0 Tf
-1 0 0 1 60.0 218.0 Tm
+1 0 0 1 60.0 180.0 Tm
 (7. Delivery Outcome \(internal closeout record\)) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 196.0 Tm
+1 0 0 1 60.0 158.0 Tm
 (This section is an internal post-delivery record for history/analysis and is not part of the) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 182.0 Tm
+1 0 0 1 60.0 144.0 Tm
 (customer-facing agreement.) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 166.0 Tm
-(Actual delivery: 39 days from signature) Tj
+1 0 0 1 60.0 128.0 Tm
+(Actual delivery: 113 days from signature) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 150.0 Tm
-(Actual date: 2024-09-09) Tj
+1 0 0 1 60.0 112.0 Tm
+(Actual date: 2025-02-23) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 134.0 Tm
-(Slip vs promise: +1 days) Tj
-/F1 8.0 Tf
-1 0 0 1 60.0 92.0 Tm
-(--------------------------------------------------------------------------------) Tj
-/F1 10.0 Tf
-1 0 0 1 60.0 74.0 Tm
-(This document is synthetic sample data generated for a hackathon demo. Customer names are) Tj
+1 0 0 1 60.0 96.0 Tm
+(Slip vs promise: +33 days) Tj
 ET
 
 endstream
@@ -129,11 +129,17 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 5 0 R >>
 endobj
 7 0 obj
-<< /Length 78 >>
+<< /Length 326 >>
 stream
 BT
+/F1 8.0 Tf
+1 0 0 1 60.0 714.0 Tm
+(--------------------------------------------------------------------------------) Tj
 /F1 10.0 Tf
-1 0 0 1 60.0 732.0 Tm
+1 0 0 1 60.0 696.0 Tm
+(This document is synthetic sample data generated for a hackathon demo. Customer names are) Tj
+/F1 10.0 Tf
+1 0 0 1 60.0 682.0 Tm
 (fictional. Not a real agreement.) Tj
 ET
 
@@ -150,11 +156,11 @@ xref
 0000000127 00000 n 
 0000000197 00000 n 
 0000000272 00000 n 
-0000003129 00000 n 
-0000003265 00000 n 
-0000003393 00000 n 
+0000003014 00000 n 
+0000003150 00000 n 
+0000003527 00000 n 
 trailer
 << /Size 9 /Root 1 0 R >>
 startxref
-3529
+3663
 %%EOF

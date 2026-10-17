@@ -13,7 +13,7 @@ endobj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
 endobj
 5 0 obj
-<< /Length 2738 >>
+<< /Length 2751 >>
 stream
 BT
 /F2 16.0 Tf
@@ -33,64 +33,64 @@ BT
 (Provider: CloudSuite, Inc.) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 624.0 Tm
-(Customer: Margie's Travel  \(Travel / Hospitality\)) Tj
+(Customer: Southridge Video  \(Media & Streaming\)) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 608.0 Tm
-(Deployment region: US-East \(Ashburn, VA\)) Tj
+(Deployment region: US-Central \(Dallas, TX\)) Tj
 /F2 12.0 Tf
 1 0 0 1 60.0 586.0 Tm
 (2. Commercial Terms) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 568.0 Tm
-(Signed: 2025-05-16  \(Q2\)) Tj
+(Signed: 2024-11-15  \(Q4\)) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 552.0 Tm
-(Term: 12 months) Tj
+(Term: 36 months) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 536.0 Tm
-(Payment terms: Annual prepay) Tj
+(Payment terms: Quarterly in advance) Tj
 /F2 12.0 Tf
 1 0 0 1 60.0 514.0 Tm
 (3. Order Line Items) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 492.0 Tm
-(- DataForge Lakehouse  [SKU-PLAT-DATA]  1000 x $180 \(per TB / mo\) = $180,000) Tj
+(- InsightIQ Analytics \(SaaS\)  [SKU-SAAS-ANLX]  250 x $1,800 \(per seat / yr\) = $450,000) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 472.0 Tm
-(- SentryShield Security \(SaaS\)  [SKU-SAAS-SEC]  250 x $2,100 \(per seat / yr\) = $525,000) Tj
+(- FlowEdge API Platform  [SKU-PLAT-API]  150 x $90 \(per 1M calls\) = $13,500) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 456.0 Tm
-(Subtotal: $705,000) Tj
+(Subtotal: $463,500) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 440.0 Tm
-(Discount: 40%  \(-$282,000\)) Tj
+(Discount: 15%  \(-$69,525\)) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 424.0 Tm
-(Total Contract Value \(TCV\): $423,000) Tj
+(Total Contract Value \(TCV\): $393,975) Tj
 /F2 12.0 Tf
 1 0 0 1 60.0 402.0 Tm
 (5. Service Levels \(SLA\)) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 384.0 Tm
-(SLA tier: Business) Tj
+(SLA tier: Mission-Critical) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 368.0 Tm
-(Uptime commitment: 99.9%) Tj
+(Uptime commitment: 99.99%) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 352.0 Tm
-(Support response: 4 business hours) Tj
+(Support response: 15 minutes, 24x7) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 336.0 Tm
-(Service credits: 10% monthly credit per 0.1% miss) Tj
+(Service credits: 25% monthly credit per 0.01% miss) Tj
 /F2 12.0 Tf
 1 0 0 1 60.0 314.0 Tm
 (6. Delivery & Implementation) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 296.0 Tm
-(Promised delivery: 33 days from signature) Tj
+(Promised delivery: 36 days from signature) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 280.0 Tm
-(Promised date: 2025-06-18) Tj
+(Promised date: 2024-12-21) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 260.0 Tm
 (Compliance pack included: No) Tj
@@ -105,13 +105,13 @@ BT
 (customer-facing agreement.) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 186.0 Tm
-(Actual delivery: 53 days from signature) Tj
+(Actual delivery: 40 days from signature) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 170.0 Tm
-(Actual date: 2025-07-08) Tj
+(Actual date: 2024-12-25) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 154.0 Tm
-(Slip vs promise: +20 days) Tj
+(Slip vs promise: +4 days) Tj
 /F1 8.0 Tf
 1 0 0 1 60.0 112.0 Tm
 (--------------------------------------------------------------------------------) Tj
@@ -136,9 +136,9 @@ xref
 0000000121 00000 n 
 0000000191 00000 n 
 0000000266 00000 n 
-0000003056 00000 n 
+0000003069 00000 n 
 trailer
 << /Size 7 /Root 1 0 R >>
 startxref
-3192
+3205
 %%EOF

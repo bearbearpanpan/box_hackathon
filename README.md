@@ -112,9 +112,24 @@ converges to a safe timeline → GREEN) and a clean deal (auto-approved, no huma
 
 ### Tests (every path)
 ```bash
-python3 agent/lambda/tools/test_comparison.py   # 5/5  (risk engine)
-python3 agent/lambda/tools/test_workflow.py      # 10/10 (notes, loop, all reviewer paths)
+python3 agent/lambda/tools/test_comparison.py          # 5/5  (risk engine)
+python3 agent/lambda/tools/test_workflow.py             # 10/10 (notes, loop, reviewer paths)
+python3 agent/lambda/tools/features/test_features.py    # 6/6  (the 5 wow features)
 ```
+
+## "Wow" features (see [ROADMAP.md](./ROADMAP.md))
+
+Five capabilities that extend the core, each grounded in what the contract-
+intelligence market ships (Ironclad, LinkSquares, Sirion) plus our promise-vs-
+reality wedge. All runnable via the handler/CLI and covered by tests:
+
+| # | Feature | Action | What it shows |
+|---|---------|--------|---------------|
+| 1 | **Deal Grade (A–F) + benchmark** | `grade-deal` | "This deal is a D. Portfolio median is C. Safer than 25% of deals." |
+| 2 | **Auto-redline from clause playbook** | `redline` | Actual clause edits (strike/insert) with fallback language + rationale |
+| 3 | **Obligation & milestone tracker** | `obligations` | Dated register of every commitment with owners + alert windows |
+| 4 | **"What-if" negotiation simulator** | `simulate`, `path-to-grade` | Move the levers, watch grade/risk recompute; "what gets us to a B?" |
+| 5 | **Portfolio radar / early-warning** | `portfolio-radar` | "10 deals route Meridian hardware in Q4 — $9M TCV exposed, +52d avg slip" |
 
 ## Run it right now (no keys needed)
 

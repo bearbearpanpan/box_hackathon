@@ -146,9 +146,50 @@ def main():
     show("Routed to", r2["review_task"]["assignee"])
     pause()
 
+    # ---------------------------------------------------------------- SCENE 8
+    banner("8) WOW features — grade, redline, obligations, what-if, portfolio")
+    sys.path.insert(0, os.path.join(HERE, "agent", "lambda", "tools", "features"))
+    import draft_contract            # noqa: E402
+    import raise_risks               # noqa: E402
+    from features import grade, redline, obligations, simulate, portfolio  # noqa: E402
+
+    _, hist = workflow._history()
+    hp = dict(res["extracted_params"])
+    hp["promised_days"] = 60                 # the original aggressive promise
+    hp["signed_date"] = "2025-11-15"
+    hard_draft = draft_contract.draft_contract(hp)["draft"]
+    hard_draft["signed_date"] = "2025-11-15"
+
+    g = grade.grade_with_benchmark(hard_draft, hist)
+    print("  [1] DEAL GRADE:    " + g["summary"])
+
+    rr = raise_risks.raise_risks(hard_draft, hist)
+    rl = redline.propose_redlines(hard_draft, rr, hist)
+    print(f"  [2] AUTO-REDLINE:  {rl['redline_count']} clause edits proposed "
+          f"(timeline -> {rl['suggested_days']}d fallback, +vendor/compliance language)")
+
+    ob = obligations.build_register(hard_draft)
+    print(f"  [3] OBLIGATIONS:   {ob['obligation_count']} dated commitments tracked; "
+          f"first: '{ob['obligations'][0]['title']}' on {ob['obligations'][0]['due_date']}")
+
+    ptg = simulate.find_path_to_grade(hard_draft, "B", hist)
+    mv = ptg.get("move") or ptg.get("best_single_move")
+    if mv:
+        print(f"  [4] WHAT-IF:       {mv['before']['grade']} -> {mv['after']['grade']} "
+              f"by changing {mv['applied']}")
+
+    pr = portfolio.scan(hist)
+    top = pr["clusters"][0]
+    print(f"  [5] PORTFOLIO:     {pr['headline']}")
+    print(f"                     #1 cluster: {top['title']} — "
+          f"{top['deal_count']} deals, {top['evidence']}")
+    pause()
+
     banner("DEMO COMPLETE")
     print("  Hard deal: caught an undeliverable promise, looped a human in, and")
     print("  converged to a safe contract. Clean deal: auto-approved untouched.")
+    print("  Plus: letter grade, auto-redlines, obligation tracking, what-if")
+    print("  simulation, and portfolio-wide early warning.")
     print("  Every number came from real document history — not a guess.")
     print()
 

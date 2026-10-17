@@ -55,7 +55,13 @@ def _money(n: float) -> str:
     return "${:,.0f}".format(n)
 
 
-def build_contract(idx: int, rng: random.Random) -> dict:
+def build_contract(idx: int, rng: random.Random, plant: bool = False) -> dict:
+    """
+    Build one contract. If `plant` is True, force the signature risk pattern
+    (Meridian Systems hardware, signed in Q4, in Ashburn) so the dataset always
+    contains discoverable examples of the pattern the demo is built around —
+    rather than leaving it to chance of the random seed.
+    """
     cid = f"CTR-{idx:04d}"
     customer, vertical = rng.choice(C.CUSTOMERS)
     region = rng.choice(C.REGIONS)
@@ -64,8 +70,19 @@ def build_contract(idx: int, rng: random.Random) -> dict:
     payment_terms = rng.choice(C.PAYMENT_TERMS)
     sla_name, uptime, response, credits = rng.choice(C.SLA_TIERS)
 
+    if plant:
+        region = "US-East (Ashburn, VA)"
+        quarter = "Q4"
+
     lines, has_hardware = _pick_products(rng)
+    if plant and not has_hardware:
+        # force a hardware line so the planted deal truly carries hardware risk
+        hw = rng.choice([p for p in C.PRODUCTS if p[2] == "hardware"])
+        lines.append((hw, rng.choice([1, 2, 3, 4])))
+        has_hardware = True
     hw_vendor = rng.choice(C.HW_VENDORS) if has_hardware else None
+    if plant and has_hardware:
+        hw_vendor = "Meridian Systems"
 
     # Pricing
     subtotal = 0
@@ -215,6 +232,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--count", type=int, default=100)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--plant", type=int, default=10,
+                    help="how many contracts to force into the Meridian/Q4/Ashburn pattern")
     here = os.path.dirname(os.path.abspath(__file__))
     ap.add_argument("--out", default=os.path.join(here, "contracts"))
     args = ap.parse_args()
@@ -222,9 +241,15 @@ def main():
     os.makedirs(args.out, exist_ok=True)
     rng = random.Random(args.seed)
 
+    # Deterministically choose which indices carry the planted pattern, spread
+    # across the corpus so they're not all clustered at the start.
+    plant_every = max(1, args.count // max(1, args.plant))
+    plant_idx = {i for i in range(1, args.count + 1) if i % plant_every == 0}
+    plant_idx = set(list(plant_idx)[:args.plant])
+
     manifest = []
     for i in range(1, args.count + 1):
-        c = build_contract(i, rng)
+        c = build_contract(i, rng, plant=(i in plant_idx))
         render_pdf(c, os.path.join(args.out, f"{c['contract_id']}.pdf"))
         manifest.append(c)
 

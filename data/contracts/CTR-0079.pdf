@@ -13,7 +13,7 @@ endobj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
 endobj
 5 0 obj
-<< /Length 2738 >>
+<< /Length 2727 >>
 stream
 BT
 /F2 16.0 Tf
@@ -33,67 +33,67 @@ BT
 (Provider: CloudSuite, Inc.) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 624.0 Tm
-(Customer: Proseware Health  \(Healthcare\)) Tj
+(Customer: Woodgrove Bank  \(Banking\)) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 608.0 Tm
-(Deployment region: US-East \(Ashburn, VA\)) Tj
+(Deployment region: APAC \(Singapore\)) Tj
 /F2 12.0 Tf
 1 0 0 1 60.0 586.0 Tm
 (2. Commercial Terms) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 568.0 Tm
-(Signed: 2024-05-04  \(Q2\)) Tj
+(Signed: 2023-11-10  \(Q4\)) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 552.0 Tm
-(Term: 36 months) Tj
+(Term: 24 months) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 536.0 Tm
-(Payment terms: Annual prepay) Tj
+(Payment terms: Net 60) Tj
 /F2 12.0 Tf
 1 0 0 1 60.0 514.0 Tm
 (3. Order Line Items) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 492.0 Tm
-(- SentryShield Security \(SaaS\)  [SKU-SAAS-SEC]  150 x $2,100 \(per seat / yr\) = $315,000) Tj
+(- CloudSuite Core Platform \(SaaS\)  [SKU-SAAS-CORE]  150 x $1,200 \(per seat / yr\) = $180,000) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 472.0 Tm
-(- Data Migration Services  [SKU-SVC-MIGR]  1 x $120,000 \(fixed\) = $120,000) Tj
+(- InsightIQ Analytics \(SaaS\)  [SKU-SAAS-ANLX]  150 x $1,800 \(per seat / yr\) = $270,000) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 456.0 Tm
-(Subtotal: $435,000) Tj
+(Subtotal: $450,000) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 440.0 Tm
-(Discount: 45%  \(-$195,750\)) Tj
+(Discount: 25%  \(-$112,500\)) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 424.0 Tm
-(Total Contract Value \(TCV\): $239,250) Tj
+(Total Contract Value \(TCV\): $337,500) Tj
 /F2 12.0 Tf
 1 0 0 1 60.0 402.0 Tm
 (5. Service Levels \(SLA\)) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 384.0 Tm
-(SLA tier: Mission-Critical) Tj
+(SLA tier: Business) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 368.0 Tm
-(Uptime commitment: 99.99%) Tj
+(Uptime commitment: 99.9%) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 352.0 Tm
-(Support response: 15 minutes, 24x7) Tj
+(Support response: 4 business hours) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 336.0 Tm
-(Service credits: 25% monthly credit per 0.01% miss) Tj
+(Service credits: 10% monthly credit per 0.1% miss) Tj
 /F2 12.0 Tf
 1 0 0 1 60.0 314.0 Tm
 (6. Delivery & Implementation) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 296.0 Tm
-(Promised delivery: 41 days from signature) Tj
+(Promised delivery: 24 days from signature) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 280.0 Tm
-(Promised date: 2024-06-14) Tj
+(Promised date: 2023-12-04) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 260.0 Tm
-(Compliance pack included: Yes) Tj
+(Compliance pack included: No) Tj
 /F2 12.0 Tf
 1 0 0 1 60.0 238.0 Tm
 (7. Delivery Outcome \(internal closeout record\)) Tj
@@ -105,13 +105,13 @@ BT
 (customer-facing agreement.) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 186.0 Tm
-(Actual delivery: 66 days from signature) Tj
+(Actual delivery: 30 days from signature) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 170.0 Tm
-(Actual date: 2024-07-09) Tj
+(Actual date: 2023-12-10) Tj
 /F1 10.0 Tf
 1 0 0 1 60.0 154.0 Tm
-(Slip vs promise: +25 days) Tj
+(Slip vs promise: +6 days) Tj
 /F1 8.0 Tf
 1 0 0 1 60.0 112.0 Tm
 (--------------------------------------------------------------------------------) Tj
@@ -136,9 +136,9 @@ xref
 0000000121 00000 n 
 0000000191 00000 n 
 0000000266 00000 n 
-0000003056 00000 n 
+0000003045 00000 n 
 trailer
 << /Size 7 /Root 1 0 R >>
 startxref
-3192
+3181
 %%EOF
