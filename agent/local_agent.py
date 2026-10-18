@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.join(ROOT, "box"))
 import envload  # noqa: E402
 from minipdf import PdfDoc  # noqa: E402
 from telemetry import (  # noqa: E402 — structured logs + CloudWatch EMF metrics
-    get_logger, log_event, timed, emit_metric, set_request_id,
+    get_logger, log_event, timed, emit_metric, set_request_id, get_request_id,
 )
 
 envload.load_env()
@@ -334,7 +334,9 @@ def match_contract(contracts: List[Dict[str, str]], query: str) -> Optional[Dict
 
 def review_contract(docs, contract_name: str, client=None) -> Dict[str, Any]:
     # Bind a correlation id so every log line for this review shares it.
-    set_request_id()
+    # Respect an id a caller (e.g. a web handler) already bound.
+    if not get_request_id():
+        set_request_id()
     emit_metric("ReviewRun", 1, "Count")
     contracts = docs.contracts()
     contract = match_contract(contracts, contract_name)
