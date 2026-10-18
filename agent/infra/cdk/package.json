@@ -1,0 +1,9 @@
+{
+  "name": "reality-check-infra",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CDK CLI pin for Reality Check infrastructure. Invoke via `npx cdk`.",
+  "devDependencies": {
+    "aws-cdk": "2.1145.0"
+  }
+}

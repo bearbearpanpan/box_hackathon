@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import os
 import re
 import sys
@@ -14,8 +15,13 @@ sys.path.insert(0, os.path.join(ROOT, "box"))
 
 import envload  # noqa: E402
 from minipdf import PdfDoc  # noqa: E402
+from telemetry import (  # noqa: E402 — structured logs + CloudWatch EMF metrics
+    get_logger, log_event, timed, emit_metric, set_request_id,
+)
 
 envload.load_env()
+
+_log = get_logger("reality_check.agent")
 
 MODEL_ID = os.environ.get("BEDROCK_MODEL_ID", "us.anthropic.claude-sonnet-4-6")
 REGION = os.environ.get("AWS_REGION", "us-east-1")
@@ -110,7 +116,12 @@ def get_docs(offline: bool = False):
     has_folders = all(os.environ.get(k) for k in
                       ("BOX_CONTRACTS_FOLDER_ID", "BOX_EVIDENCE_FOLDER_ID", "BOX_REPORTS_FOLDER_ID"))
     if not offline and has_auth and has_folders:
+        log_event(_log, "source.selected", backend="box")
         return BoxDocs()
+    # Surface offline selection (a deployment expecting live Box but missing
+    # creds/folders silently runs on fixtures otherwise).
+    log_event(_log, "source.selected", level=logging.WARNING, backend="local",
+              reason="offline flag or Box creds/folders not set")
     return LocalDocs()
 
 
@@ -167,13 +178,31 @@ def llm_review(client, contract_name: str, contract_text: str, sources: List[Dic
     blocks = [f"CONTRACT: {contract_name}\n{contract_text}"]
     for s in sources:
         blocks.append(f"SOURCE {s['ref']}: {s['title']} (last updated {s['last_updated']})\n{s['text']}")
-    resp = client.converse(
-        modelId=MODEL_ID,
-        system=[{"text": REVIEW_SYSTEM}],
-        messages=[{"role": "user", "content": [{"text": "\n\n---\n\n".join(blocks)}]}],
-        toolConfig={"tools": [REVIEW_TOOL], "toolChoice": {"tool": {"name": "submit_review"}}},
-        inferenceConfig={"maxTokens": 4000, "temperature": 0},
-    )
+    # Time the model call and record token usage / failures so cost and latency
+    # of the one external dependency (Bedrock) are visible in CloudWatch.
+    try:
+        with timed(_log, "bedrock.converse", model_id=MODEL_ID,
+                   source_count=len(sources)) as span:
+            resp = client.converse(
+                modelId=MODEL_ID,
+                system=[{"text": REVIEW_SYSTEM}],
+                messages=[{"role": "user", "content": [{"text": "\n\n---\n\n".join(blocks)}]}],
+                toolConfig={"tools": [REVIEW_TOOL], "toolChoice": {"tool": {"name": "submit_review"}}},
+                inferenceConfig={"maxTokens": 4000, "temperature": 0},
+            )
+            usage = resp.get("usage", {}) or {}
+            span["input_tokens"] = usage.get("inputTokens")
+            span["output_tokens"] = usage.get("outputTokens")
+            emit_metric("BedrockInvoke", 1, "Count", model_id=MODEL_ID)
+            if usage.get("inputTokens") is not None:
+                emit_metric("BedrockInputTokens", usage["inputTokens"], "Count")
+            if usage.get("outputTokens") is not None:
+                emit_metric("BedrockOutputTokens", usage["outputTokens"], "Count")
+    except Exception as exc:
+        emit_metric("BedrockInvokeFailure", 1, "Count")
+        log_event(_log, "bedrock.invoke_failed", level=logging.ERROR,
+                  model_id=MODEL_ID, error=str(exc), error_type=type(exc).__name__)
+        raise
     for block in resp["output"]["message"]["content"]:
         if "toolUse" in block:
             return block["toolUse"]["input"]["claims"]
@@ -304,9 +333,15 @@ def match_contract(contracts: List[Dict[str, str]], query: str) -> Optional[Dict
 
 
 def review_contract(docs, contract_name: str, client=None) -> Dict[str, Any]:
+    # Bind a correlation id so every log line for this review shares it.
+    set_request_id()
+    emit_metric("ReviewRun", 1, "Count")
     contracts = docs.contracts()
     contract = match_contract(contracts, contract_name)
     if not contract:
+        emit_metric("ReviewNoMatch", 1, "Count")
+        log_event(_log, "review.no_match", requested=contract_name,
+                  available=len(contracts))
         return {"error": f"No contract matching '{contract_name}'.",
                 "available": [c["name"] for c in contracts]}
     contract_text = pdf_text(docs.read(contract["id"]))
@@ -318,6 +353,16 @@ def review_contract(docs, contract_name: str, client=None) -> Dict[str, Any]:
     in_order = classify(llm_review(client or bedrock(), contract["name"], contract_text, sources))
     claims = by_severity(in_order)
     counts = summarize(claims)
+    # Emit the review KPIs the dashboard rolls up: claims by result and by
+    # severity, so you can see what the agent is finding over time.
+    emit_metric("ReviewClaims", len(claims), "Count")
+    for result in RESULTS:
+        emit_metric("ReviewResult", counts.get(result, 0), "Count", result=result)
+    for sev in ("High", "Medium", "None"):
+        emit_metric("ReviewSeverity", counts.get(f"severity_{sev}", 0), "Count", severity=sev)
+    log_event(_log, "review.done", contract=contract["name"],
+              claims=len(claims), risks=counts.get("Risk identified", 0),
+              high=counts.get("severity_High", 0))
     pdf = build_report(contract, claims, counts, sources)
     name = f"Risk Review - {contract['name'].rsplit('.', 1)[0]}.pdf"
     report = docs.upload_report(name, pdf)
