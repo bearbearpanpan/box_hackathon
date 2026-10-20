@@ -1,0 +1,66 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "serialNumber": "urn:uuid:b6d38a83-2127-57d3-93b2-212e51c8009f",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-10-18T17:42:30.499372+00:00",
+    "tools": [
+      {
+        "vendor": "Reality Check",
+        "name": "generate_sbom.py",
+        "version": "1.0.0"
+      }
+    ],
+    "component": {
+      "type": "application",
+      "name": "reality-check",
+      "description": "AWS Bedrock agent that reviews tech-sales contracts from Box.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "boto3",
+      "version": "1.39.0",
+      "purl": "pkg:pypi/boto3@1.39.0",
+      "properties": [
+        {
+          "name": "constraint",
+          "value": ">=1.39.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "botocore",
+      "version": "1.39.0",
+      "purl": "pkg:pypi/botocore@1.39.0",
+      "properties": [
+        {
+          "name": "constraint",
+          "value": ">=1.39.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "boxsdk",
+      "version": "10.0.0",
+      "purl": "pkg:pypi/boxsdk@10.0.0",
+      "properties": [
+        {
+          "name": "constraint",
+          "value": ">=10.0.0"
+        }
+      ]
+    }
+  ]
+}

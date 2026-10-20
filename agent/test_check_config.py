@@ -36,7 +36,8 @@ def test_bearer_token_counts_as_credentials():
     saved = {k: os.environ.get(k) for k in _CRED_KEYS}
     try:
         _clear_cred_env()
-        os.environ["AWS_BEARER_TOKEN_BEDROCK"] = "test-bearer-token"
+        # Fake test fixture, not a real secret.
+        os.environ["AWS_BEARER_TOKEN_BEDROCK"] = "test-bearer-token"  # nosec B105
         env = check_config._check_env()
         assert env["aws_creds_present"] is True, env
     finally:

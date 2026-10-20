@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+#
+# Pre-commit hook: regenerate the CycloneDX SBOM and stage it so sbom.json is
+# always current in the repo on every check-in.
+#
+# Installed via: scripts/install-hooks.sh  (sets core.hooksPath=.githooks)
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+# Regenerate the SBOM. The generator is dependency-free and preserves the
+# timestamp when components are unchanged, so it only produces a diff when
+# dependencies actually changed.
+python3 "$REPO_ROOT/scripts/generate_sbom.py" >/dev/null
+
+# Stage it if it changed so the committed SBOM never drifts from the deps.
+if ! git diff --quiet -- "$REPO_ROOT/sbom.json" 2>/dev/null; then
+    git add "$REPO_ROOT/sbom.json"
+    echo "pre-commit: sbom.json regenerated and staged."
+fi
+
+exit 0
