@@ -12,6 +12,10 @@ are published automatically by the service.
 
 The dashboard is intentionally succinct: three rows of three widgets, each
 answering one operational question.
+
+Layout: each row is three graph widgets (height 4) followed by ONE full-width
+legend strip (height 1). CloudWatch text widgets render only a Markdown subset
+(no raw HTML), so legends are plain Markdown kept to a single dense line.
 """
 from __future__ import annotations
 
@@ -80,67 +84,47 @@ class ObservabilityStack(Stack):
         dashboard.add_widgets(
             cw.TextWidget(
                 markdown=(
-                    f"# Reality Check - Ops & Utilization\n"
-                    f"Lambda **`{function_name}`** - region **`{self.region}`** - "
-                    f"custom metrics namespace **`{NAMESPACE}`** "
+                    f"# Reality Check &mdash; Ops & Utilization\n"
+                    f"Lambda **`{function_name}`** &nbsp;·&nbsp; region **`{self.region}`** "
+                    f"&nbsp;·&nbsp; metrics **`{NAMESPACE}`** "
                     "(emitted when the Lambda runs with `EMIT_METRICS=true`).\n\n"
-                    "**Row 1 - Service health** (is the function healthy?) &nbsp;|&nbsp; "
-                    "**Row 2 - Throughput & Bedrock** (reviews run + model usage/cost) &nbsp;|&nbsp; "
-                    "**Row 3 - Review KPIs** (what the agent concluded)."
+                    "**1** Service health &nbsp;·&nbsp; **2** Throughput & Bedrock "
+                    "&nbsp;·&nbsp; **3** Review KPIs"
                 ),
                 width=24,
-                height=3,
+                height=2,
             )
         )
 
-        # Row 1 — Lambda health. Each widget pairs a labelled graph with a short
-        # "what/why" caption so an on-call reader needs no external doc.
+        # Row 1 — Lambda health
         dashboard.add_widgets(
             self._lambda_invocations_widget(lambda_dims),
             self._lambda_duration_widget(lambda_dims),
             self._lambda_concurrency_widget(lambda_dims),
         )
-        dashboard.add_widgets(
-            self._caption(
-                "**Invocations / Errors / Throttles**",
-                "Traffic and failure volume. Errors > 0 or any throttles means "
-                "the function is dropping work - investigate.",
-            ),
-            self._caption(
-                "**Duration p50 / p99 vs 60s timeout**",
-                "Request latency. p99 riding the red 60s line means runs are "
-                "about to time out (often slow Box AI calls).",
-            ),
-            self._caption(
-                "**Max concurrent executions**",
-                "Parallelism in use. Approaching the account concurrency limit "
-                "risks throttling; informs reserved-concurrency sizing.",
-            ),
-        )
+        dashboard.add_widgets(self._legend(
+            ("Invocations / Errors / Throttles",
+             "traffic and failure volume; errors or throttles > 0 = work is being dropped"),
+            ("Duration p50 / p99 vs 60s",
+             "request latency; p99 near the red line = runs about to time out"),
+            ("Max concurrency",
+             "parallelism in use; nearing the account limit risks throttling"),
+        ))
 
         # Row 2 — review throughput + Bedrock dependency
         dashboard.add_widgets(
             self._actions_widget(),
-            self._box_ai_widget(),
+            self._claims_widget(),
             self._bedrock_widget(),
         )
-        dashboard.add_widgets(
-            self._caption(
-                "**Contract reviews run**",
-                "Review volume vs. no-match runs (contract name couldn't be "
-                "resolved to a source doc). Rising no-match = ingestion drift.",
-            ),
-            self._caption(
-                "**Claims reviewed**",
-                "How many individual claims were checked across all reviews. "
-                "The per-run workload driver for latency and token spend.",
-            ),
-            self._caption(
-                "**Bedrock invokes / failures / tokens**",
-                "Bedrock usage for the LLM review. Failures = degraded "
-                "analysis; tokens (right axis) track model spend.",
-            ),
-        )
+        dashboard.add_widgets(self._legend(
+            ("Contract reviews run",
+             "reviews vs. no-match; rising no-match = ingestion drift"),
+            ("Claims reviewed",
+             "claims checked — the per-run latency & token-spend driver"),
+            ("Bedrock invokes / failures / tokens",
+             "failures = degraded analysis; tokens (right axis) = model spend"),
+        ))
 
         # Row 3 — review KPIs
         dashboard.add_widgets(
@@ -148,23 +132,14 @@ class ObservabilityStack(Stack):
             self._human_loop_widget(),
             self._risk_mix_widget(),
         )
-        dashboard.add_widgets(
-            self._caption(
-                "**Claims by result**",
-                "No-risk vs. risk-identified vs. no-source-found, stacked. The "
-                "core outcome signal for what the agent concluded.",
-            ),
-            self._caption(
-                "**Risks flagged**",
-                "Count of claims the agent flagged as risk-identified. The "
-                "human-review workload: every flag is a deal a person must read.",
-            ),
-            self._caption(
-                "**Claim severity mix (High/Medium/None)**",
-                "Severity tier of reviewed claims. A High-heavy mix means the "
-                "pipeline is surfacing materially risky terms.",
-            ),
-        )
+        dashboard.add_widgets(self._legend(
+            ("Claims by result",
+             "no-risk / risk-identified / no-source-found"),
+            ("Risks flagged",
+             "risk-identified count = the human-review workload"),
+            ("Claim severity mix",
+             "High / Medium / None; High-heavy = materially risky terms"),
+        ))
 
         CfnOutput(
             self,
@@ -179,17 +154,15 @@ class ObservabilityStack(Stack):
     # ------------------------------------------------------------------ #
     # Widget helpers
     # ------------------------------------------------------------------ #
-    def _caption(self, title: str, body: str) -> cw.TextWidget:
-        """A collapsible caption that sits under a metric widget. Collapsed by
-        default (one thin row): the reader sees only the widget name with a
-        disclosure triangle, and expands it to read what it tracks and why.
-        CloudWatch text widgets render HTML <details>/<summary>, so this keeps
-        the dashboard compact while the explanation stays one click away."""
+    def _legend(self, *items: tuple[str, str]) -> cw.TextWidget:
+        """A full-width legend strip that renders below a row of metric widgets.
+        CloudWatch text widgets render only a Markdown subset (no raw HTML tags
+        like <details>/<summary>), so this keeps the dashboard compact with
+        rendering-safe Markdown."""
+        cols = [f"**{title}** &mdash; {desc}" for title, desc in items]
         return cw.TextWidget(
-            markdown=(
-                f"<details><summary>&#9432; {title}</summary>\n\n{body}\n\n</details>"
-            ),
-            width=8,
+            markdown=" &nbsp;·&nbsp; ".join(cols),
+            width=24,
             height=1,
         )
 
@@ -226,7 +199,7 @@ class ObservabilityStack(Stack):
         return cw.GraphWidget(
             title="Lambda invocations & errors",
             width=8,
-            height=5,
+            height=4,
             left=[
                 self._lambda_metric("Invocations", dims),
                 self._lambda_metric("Errors", dims),
@@ -239,7 +212,7 @@ class ObservabilityStack(Stack):
         return cw.GraphWidget(
             title="Lambda duration (p50 / p99) vs 60s timeout",
             width=8,
-            height=5,
+            height=4,
             left=[
                 self._lambda_metric("Duration", dims, stat="p50"),
                 self._lambda_metric("Duration", dims, stat="p99"),
@@ -256,7 +229,7 @@ class ObservabilityStack(Stack):
         return cw.GraphWidget(
             title="Concurrency",
             width=8,
-            height=5,
+            height=4,
             left=[self._lambda_metric("ConcurrentExecutions", dims, stat="Maximum")],
             left_y_axis=cw.YAxisProps(min=0),
         )
@@ -268,7 +241,7 @@ class ObservabilityStack(Stack):
         return cw.GraphWidget(
             title="Contract reviews run",
             width=8,
-            height=5,
+            height=4,
             left=[
                 self._rc_metric("ReviewRun", label="reviews", color=BLUE),
                 self._rc_metric("ReviewNoMatch", label="no-match", color=AMBER),
@@ -276,11 +249,11 @@ class ObservabilityStack(Stack):
             left_y_axis=cw.YAxisProps(min=0),
         )
 
-    def _box_ai_widget(self) -> cw.GraphWidget:
+    def _claims_widget(self) -> cw.GraphWidget:
         return cw.GraphWidget(
             title="Claims reviewed",
             width=8,
-            height=5,
+            height=4,
             left=[
                 self._rc_metric("ReviewClaims", stat="Sum", label="claims", color=BLUE),
             ],
@@ -291,7 +264,7 @@ class ObservabilityStack(Stack):
         return cw.GraphWidget(
             title="Bedrock: invokes, failures & tokens",
             width=8,
-            height=5,
+            height=4,
             left=[
                 self._rc_metric("BedrockInvoke", label="invokes", color=BLUE),
                 self._rc_metric("BedrockInvokeFailure", label="failures", color=RED),
@@ -311,7 +284,7 @@ class ObservabilityStack(Stack):
         return cw.GraphWidget(
             title="Claims by result",
             width=8,
-            height=5,
+            height=4,
             stacked=True,
             left=[
                 self._rc_metric("ReviewResult", dims={"result": "No risk"},
@@ -328,7 +301,7 @@ class ObservabilityStack(Stack):
         return cw.GraphWidget(
             title="Risks found vs clean reviews",
             width=8,
-            height=5,
+            height=4,
             left=[
                 self._rc_metric("ReviewResult", dims={"result": "Risk identified"},
                                 stat="Sum", label="risks flagged", color=RED),
@@ -340,7 +313,7 @@ class ObservabilityStack(Stack):
         return cw.GraphWidget(
             title="Claim severity mix",
             width=8,
-            height=5,
+            height=4,
             stacked=True,
             left=[
                 self._rc_metric("ReviewSeverity", dims={"severity": "High"},

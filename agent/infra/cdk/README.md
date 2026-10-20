@@ -11,13 +11,13 @@ service metrics.
 
 ## What it creates
 
-- **CloudWatch dashboard** (`RealityCheck`) — three rows:
+- **CloudWatch dashboard** (`RealityCheck`) — three compact rows:
   1. **Lambda health** — invocations / errors / throttles, p50/p99 duration vs
      the 60s timeout, max concurrency.
-  2. **External dependencies** — actions invoked by action, Box AI calls &
-     extraction failures, Bedrock invokes / failures / token usage.
-  3. **Workflow KPIs** — runs by outcome, human-in-the-loop rate & avg
-     iterations, final risk mix (RED / AMBER / GREEN).
+  2. **Throughput & Bedrock** — contract reviews run vs no-match, claims reviewed,
+     Bedrock invokes / failures / token usage.
+  3. **Review KPIs** — claims by result (No risk / Risk identified / No source found),
+     risks flagged, claim severity mix (High / Medium / None).
 - **Baseline alarms** — Lambda errors, p99 duration nearing timeout, Bedrock
   invoke failures.
 - **Optional SNS email notifications** for those alarms (pass `alarmEmail`).
@@ -54,15 +54,15 @@ npm install                         # pinned CDK CLI (invoke via ./node_modules/
 
 ### Configuration (CDK context)
 
-| Context key     | Default               | Purpose                                   |
-|-----------------|-----------------------|-------------------------------------------|
-| `functionName`  | `reality-check-tools` | Lambda function name the widgets target.  |
-| `dashboardName` | `RealityCheck`        | CloudWatch dashboard name.                |
-| `alarmEmail`    | *(unset)*             | If set, creates an SNS topic + email sub. |
+| Context key     | Default          | Purpose                                   |
+|-----------------|------------------|-------------------------------------------|
+| `functionName`  | `reality-check`  | Lambda function name the widgets target.  |
+| `dashboardName` | `RealityCheck`   | CloudWatch dashboard name.                |
+| `alarmEmail`    | *(unset)*        | If set, creates an SNS topic + email sub. |
 
 ```bash
 ./node_modules/.bin/cdk deploy \
-  -c functionName=reality-check-tools \
+  -c functionName=reality-check \
   -c alarmEmail=ops@example.com
 ```
 
